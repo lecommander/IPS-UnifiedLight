@@ -29,10 +29,12 @@
 |---------|-------|-----------|--------------|-----------|--------|
 | KNX | 3 | Prio 1 | KNX/EIB Gebäudebus-Standard | Offizielles KNX-Modul | ✅ Implementiert |
 | HomeMatic IP | 4 | Prio 1 | 868 MHz Funk, HmIP-PDT Dimmer | Offizielles HomeMatic-Modul | ❌ Geplant |
-| Philips Hue | 5 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ❌ Geplant |
-| DALI (über KNX) | 6 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ❌ Geplant |
-| Tasmota/ESP | 7 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API | ❌ Geplant |
-| WLED | 8 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT | ❌ Geplant |
+| HomeMatic Funk | 5 | Prio 1 | 868 MHz Funk (HM-LC-Dim, HM-LC-Sw) | Offizielles HomeMatic-Modul | ❌ Geplant |
+| HomeMatic Wired | 6 | Prio 1 | HomeMatic Wired (HMW-LC-Dim, HMW-LC-Sw) | Offizielles HomeMatic-Modul | ❌ Geplant |
+| Philips Hue | 7 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ❌ Geplant |
+| DALI (über KNX) | 8 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ❌ Geplant |
+| Tasmota/ESP | 9 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API | ❌ Geplant |
+| WLED | 10 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT | ❌ Geplant |
 
 ---
 
@@ -48,6 +50,33 @@
 | FR-004 | Modul muss FadeTo-Funktion für DMX bereitstellen | ✅ Implementiert |
 | FR-005 | Modul muss über GUI (Formular) konfigurierbar sein | ✅ Implementiert |
 | FR-006 | Modul muss über Scripting API aufrufbar sein | ✅ Implementiert |
+| FR-007 | Modul muss IPSLight Feature-Parity bieten (Schalten, Dimmen, Gruppen, Programme) | ❌ Geplant |
+| FR-008 | Modul muss WebFront-Visualisierung unterstützen | ❌ Geplant |
+
+### 2.1a IPSLight Feature-Parity (Referenz: IPSLibrary)
+
+| ID | IPSLight Feature | UnifiedLight Äquivalent | Status |
+|----|------------------|------------------------|--------|
+| IP-001 | IPSLight_SetSwitch($id, $value) | SetPower($on) | ✅ Implementiert |
+| IP-002 | IPSLight_ToggleSwitch($id) | Toggle() | ✅ Implementiert |
+| IP-003 | IPSLight_SetDimmerAbs($id, $value) | SetBrightness($level) | ✅ Implementiert |
+| IP-004 | IPSLight_SetDimmerRel($id, $value) | SetBrightness($level) (relativ nicht direkt unterstützt) | ❌ Geplant |
+| IP-005 | IPSLight_SetGroup($groupId, $value) | LightGroup (RM-008) | ❌ Geplant |
+| IP-006 | IPSLight_SetProgram($programId, $value) | Nicht vorgesehen | ❌ Nicht geplant |
+| IP-007 | IPSLight_BeforeSwitch/AfterSwitch Callbacks | Nicht vorgesehen | ❌ Nicht geplant |
+| IP-008 | WebFront Übersichtsseiten (Stockwerke) | IPS WebFront nutzt native Variablen | ✅ Teilweise |
+| IP-009 | IPSLight_SetRGB($id, $color) | RGBW (RM-007) | ❌ Geplant |
+| IP-010 | IPSLight_SetValueByName($lightName, $value) | IPS_GetObjectIDByIdent() | ✅ Implementiert |
+
+### 2.1b WebFront-Visualisierung
+
+| ID | Anforderung | Beschreibung | Status |
+|----|-------------|--------------|--------|
+| WF-001 | Native IPS-Variablen | Power (~Switch) und Brightness (~Intensity.100) werden automatisch im WebFront angezeigt | ✅ Implementiert |
+| WF-002 | Variable Profiles | ~Switch und ~Intensity.100 sind IPS-Standard-Profile mit WebFront-Unterstützung | ✅ Implementiert |
+| WF-003 | Status-Icons | Form-Status (102=Active, 201=Warning) werden im WebFront angezeigt | ✅ Implementiert |
+| WF-004 | Kategorien/Zuordnung | Instanzen können im WebFront Kategorien zugeordnet werden (IPS-Core-Funktion) | ✅ Implementiert |
+| WF-005 | LightGroup-Visualisierung | Gruppen-Ansicht für mehrere Lichter (RM-008) | ❌ Geplant |
 
 ### 2.2 Backend-spezifische Anforderungen
 
@@ -88,11 +117,31 @@
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-411 | HomeMatic Instance muss auswählbar sein | ❌ Geplant |
-| FR-412 | Geräte-ID des HmIP-PDT Dimmers muss konfigurierbar sein | ❌ Geplant |
-| FR-413 | HM_WriteValueFloat() wird für Dimmen verwendet | ❌ Geplant |
-| FR-414 | RequestAction() auf Power-Variable des Dimmers | ❌ Geplant |
-| FR-415 | LEVEL Variable (0.0–1.0) wird auf 0–100 gemappt | ❌ Geplant |
+| FR-411 | HomeMatic Instance (CCU/Zentrale) muss auswählbar sein | ❌ Geplant |
+| FR-412 | Geräte-ID des HmIP Dimmers/Schalters muss konfigurierbar sein | ❌ Geplant |
+| FR-413 | HM_WriteValueFloat($id, "LEVEL", 0.0–1.0) wird für Dimmen verwendet | ❌ Geplant |
+| FR-414 | HM_WriteValueBoolean($id, "STATE", true/false) wird für Schalten verwendet | ❌ Geplant |
+| FR-415 | LEVEL (0.0–1.0) wird auf 0–100 gemappt und umgekehrt | ❌ Geplant |
+| FR-416 | HmIP-PDT, HmIP-FDT, HmIP-BSL Dimmer werden unterstützt | ❌ Geplant |
+| FR-417 | RAMP_TIME Parameter für Fade-Übergänge | ❌ Geplant |
+
+#### HomeMatic Funk Backend (Prio 1 — geplant)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-421 | Gleiche Infrastruktur wie HomeMatic IP (CCU-basiert) | ❌ Geplant |
+| FR-422 | HM-LC-Dim1TPBU-FM, HM-LC-Dim1T-FM Dimmer werden unterstützt | ❌ Geplant |
+| FR-423 | HM_WriteValueFloat/Boolean API identisch zu HmIP | ❌ Geplant |
+| FR-424 | On_Time Parameter für Zeit-Schaltvorgänge | ❌ Geplant |
+
+#### HomeMatic Wired Backend (Prio 1 — geplant)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-431 | Gleiche Infrastruktur wie HomeMatic IP (HMW-Geräte) | ❌ Geplant |
+| FR-432 | HMW-LC-Dim1L-DR, HMW-IO-12-Sw7-DR werden unterstützt | ❌ Geplant |
+| FR-433 | HM_WriteValueFloat/Boolean API identisch zu Funk/IP | ❌ Geplant |
+| FR-434 | HomeMatic Wired nutzt RS485-Bus statt Funk | ❌ Geplant |
 
 #### Philips Hue Backend (Prio 2 — geplant)
 
@@ -350,14 +399,17 @@ SET Status = 102 (Active)
 |----|---------|-----------|--------|
 | RM-001 | KNX Backend | Prio 1 | ✅ Implementiert |
 | RM-002 | HomeMatic IP Backend | Prio 1 | ❌ Geplant |
+| RM-002a | HomeMatic Funk Backend | Prio 1 | ❌ Geplant |
+| RM-002b | HomeMatic Wired Backend | Prio 1 | ❌ Geplant |
 | RM-003 | Philips Hue Backend | Prio 2 | ❌ Geplant |
 | RM-004 | DALI über KNX Gateway | Prio 2 | ❌ Geplant |
 | RM-005 | Tasmota/ESP Backend (MQTT/HTTP) | Prio 3 | ❌ Geplant |
 | RM-006 | WLED Backend (HTTP/MQTT) | Prio 3 | ❌ Geplant |
 | RM-007 | RGBW / Color Support (ColorTemp, RGB) | Hoch | ❌ Geplant |
 | RM-008 | LightGroup: Mehrere Instanzen als Szene steuern | Mittel | ❌ Geplant |
-| RM-009 | Transition Time für Shelly/Zigbee2MQTT | Mittel | ❌ Geplant |
-| RM-010 | GitHub Actions Test Suite | Hoch | ❌ Geplant |
+| RM-009 | Transition Time für Shelly/Zigbee2MQTT/HomeMatic | Mittel | ❌ Geplant |
+| RM-010 | GitHub Actions Test Suite | Hoch | ✅ Implementiert |
+| RM-011 | IPSLight Feature-Parity Dokumentation | Hoch | ✅ Implementiert |
 
 ---
 
@@ -381,6 +433,7 @@ SET Status = 102 (Active)
 | 1.0.0 | 2026-04-06 | Initiales Requirements-Dokument erstellt | Qwen Code |
 | 1.1.0 | 2026-04-06 | GitHub Actions Test Suite + REQUIREMENTS.md Update Policy + Backend-Roadmap | Qwen Code |
 | 1.2.0 | 2026-04-06 | KNX Backend implementiert (EIB_Switch, EIB_DimValue) | Qwen Code |
+| 1.3.0 | 2026-04-06 | HomeMatic Funk + Wired hinzugefügt, IPSLight Feature-Parity Analyse, WebFront-Dokumentation | Qwen Code |
 
 ---
 
