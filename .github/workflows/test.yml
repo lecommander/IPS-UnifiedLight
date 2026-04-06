@@ -1,0 +1,140 @@
+name: UnifiedLight Tests
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  syntax:
+    name: PHP & JSON Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          coverage: none
+          tools: none
+
+      - name: PHP Syntax Check
+        run: php -l LightDevice/module.php
+
+      - name: JSON Validation (form.json)
+        run: python -m json.tool LightDevice/form.json > /dev/null
+
+      - name: JSON Validation (module.json)
+        run: python -m json.tool LightDevice/module.json > /dev/null
+
+  structure:
+    name: Module Structure Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Backend Constants Defined
+        run: |
+          echo "Checking BACKEND_DMX constant..."
+          grep -q "const BACKEND_DMX" LightDevice/module.php
+          echo "Checking BACKEND_SHELLY constant..."
+          grep -q "const BACKEND_SHELLY" LightDevice/module.php
+          echo "Checking BACKEND_ZIGBEE2MQTT constant..."
+          grep -q "const BACKEND_ZIGBEE2MQTT" LightDevice/module.php
+          echo "All backend constants found."
+
+      - name: Check ApplyChanges Validates All Backends
+        run: |
+          echo "Checking ApplyChanges validates DMX..."
+          grep -q "case self::BACKEND_DMX:" LightDevice/module.php
+          echo "Checking ApplyChanges validates Shelly..."
+          grep -q "case self::BACKEND_SHELLY:" LightDevice/module.php
+          echo "Checking ApplyChanges validates Zigbee2MQTT..."
+          grep -q "case self::BACKEND_ZIGBEE2MQTT:" LightDevice/module.php
+          echo "All backends validated in ApplyChanges."
+
+      - name: Check RequestAction Handles All Idents
+        run: |
+          echo "Checking RequestAction handles Power..."
+          grep -q "case 'Power':" LightDevice/module.php
+          echo "Checking RequestAction handles Brightness..."
+          grep -q "case 'Brightness':" LightDevice/module.php
+          echo "All idents handled in RequestAction."
+
+      - name: Check Public API Functions Exist
+        run: |
+          echo "Checking SetPower..."
+          grep -q "public function SetPower" LightDevice/module.php
+          echo "Checking SetBrightness..."
+          grep -q "public function SetBrightness" LightDevice/module.php
+          echo "Checking Toggle..."
+          grep -q "public function Toggle" LightDevice/module.php
+          echo "Checking FadeTo..."
+          grep -q "public function FadeTo" LightDevice/module.php
+          echo "All public API functions found."
+
+      - name: Check form.json Has BackendType Select
+        run: |
+          echo "Checking BackendType select in form.json..."
+          python -c "
+          import json, sys
+          with open('LightDevice/form.json') as f:
+              form = json.load(f)
+          elements = form.get('elements', [])
+          backend_type_found = False
+          for el in elements:
+              if el.get('name') == 'BackendType':
+                  backend_type_found = True
+                  options = el.get('options', [])
+                  if len(options) < 3:
+                      print('ERROR: BackendType must have at least 3 options')
+                      sys.exit(1)
+                  break
+          if not backend_type_found:
+              print('ERROR: BackendType select not found in form.json')
+              sys.exit(1)
+          print('BackendType select validated.')
+          "
+
+      - name: Check Status Codes Defined
+        run: |
+          echo "Checking status code 102 (Active)..."
+          python -c "
+          import json, sys
+          with open('LightDevice/form.json') as f:
+              form = json.load(f)
+          status_codes = {s['code'] for s in form.get('status', [])}
+          if 102 not in status_codes:
+              print('ERROR: Status code 102 (Active) not defined')
+              sys.exit(1)
+          if 201 not in status_codes:
+              print('ERROR: Status code 201 (Not configured) not defined')
+              sys.exit(1)
+          print('Status codes 102 and 201 validated.')
+          "
+
+  requirements:
+    name: Requirements Doc Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check REQUIREMENTS.md Exists
+        run: |
+          if [ ! -f "docs/REQUIREMENTS.md" ]; then
+            echo "ERROR: docs/REQUIREMENTS.md not found"
+            exit 1
+          fi
+          echo "REQUIREMENTS.md exists."
+
+      - name: Check REQUIREMENTS.md Has Required Sections
+        run: |
+          echo "Checking required sections..."
+          grep -q "## 1. Modul-Übersicht" docs/REQUIREMENTS.md
+          grep -q "## 2. Funktionale Anforderungen" docs/REQUIREMENTS.md
+          grep -q "## 4. API-Spezifikation" docs/REQUIREMENTS.md
+          grep -q "## 6. Validierung" docs/REQUIREMENTS.md
+          grep -q "## 7. Test-Spezifikation" docs/REQUIREMENTS.md
+          grep -q "## 8. Roadmap" docs/REQUIREMENTS.md
+          echo "All required sections present."

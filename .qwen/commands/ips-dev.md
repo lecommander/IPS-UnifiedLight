@@ -161,6 +161,70 @@ Bevor Phase 4: Stelle sicher dass ALLE Punkte erfüllt sind:
 - [ ] README.md aktuell (wenn user-sichtbares Verhalten geändert wurde)
 - [ ] Alle Backends (DMX/Shelly/Zigbee2MQTT) sind getestet oder explizit geplant
 
+### 3f. REQUIREMENTS.md aktualisieren (PFLICHT)
+
+**Bei JEDER Änderung an module.php, form.json oder module.json MUSS docs/REQUIREMENTS.md aktualisiert werden.**
+
+Prüfe und aktualisiere folgende Sektionen:
+
+1. **Funktionale Anforderungen (Sektion 2.2)** — Füge neue Requirements für geänderte Backends hinzu oder aktualisiere bestehende
+2. **Formular-Anforderungen (Sektion 2.3)** — Aktualisiere bei form.json-Änderungen
+3. **API-Spezifikation (Sektion 4)** — Neue Properties, Variablen oder Funktionen dokumentieren
+4. **Validierung (Sektion 6)** — Neue Validierungslogik dokumentieren
+5. **Test-Spezifikation (Sektion 7)** — Neue Test Cases hinzufügen (siehe 3g)
+6. **Änderungsverlauf (Sektion 10)** — Neuen Eintrag mit Datum und Änderung hinzufügen
+
+Nutze `edit` oder `write_file` um REQUIREMENTS.md zu aktualisieren. Markiere geänderte Requirements mit aktuellem Datum und Autor.
+
+### 3g. Test Cases implementieren (PFLICHT)
+
+**Für jede funktionale Änderung MÜSSEN Test Cases erstellt werden.**
+
+#### Manuelle Test Cases (docs/REQUIREMENTS.md Sektion 7)
+
+Füge in REQUIREMENTS.md unter "7. Test-Spezifikation" neue Test Cases hinzu:
+
+```markdown
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-XXX | [Beschreibung] | [Erwartetes Ergebnis] | ❌ Offen |
+```
+
+#### Automatisierte Test Cases (GitHub Actions)
+
+Erstelle oder erweitere `.github/workflows/test.yml` mit PHP-basierten Tests:
+
+1. **Syntax-Prüfung**: `php -l LightDevice/module.php` — Stellt sicher dass PHP-Code valide ist
+2. **JSON-Prüfung**: `python -m json.tool LightDevice/form.json` — Stellt sicher dass form.json gültig ist
+3. **Struktur-Prüfung**: Prüfe dass alle BackendType-Cases in module.php existieren
+4. **Backend-Validierung**: Prüfe dass ApplyChanges für jedes Backend alle required Parameter validiert
+
+Der GitHub Actions Workflow MUSS bei jedem Pull Request automatisch ausgeführt werden.
+
+#### Test-Case Format für GitHub Actions
+
+```yaml
+name: UnifiedLight Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP Syntax Check
+        run: php -l LightDevice/module.php
+      - name: JSON Validation
+        run: python -m json.tool LightDevice/form.json > /dev/null
+      - name: Structure Check
+        run: |
+          # Prüfe dass alle Backend-Konstanten definiert sind
+          grep -q "BACKEND_DMX" LightDevice/module.php
+          grep -q "BACKEND_SHELLY" LightDevice/module.php
+          grep -q "BACKEND_ZIGBEE2MQTT" LightDevice/module.php
+          # Prüfe dass ApplyChanges alle Backends validiert
+          grep -q "case self::BACKEND_DMX:" LightDevice/module.php
+```
+
 ---
 
 ## PHASE 4: REVIEW & SUMMARY
