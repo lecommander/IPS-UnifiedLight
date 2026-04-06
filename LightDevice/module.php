@@ -4,14 +4,18 @@
  * LightDevice — Unified Light Controller
  *
  * Provides a single interface (Power + Brightness) for DMX, Shelly Dimmer,
- * Zigbee2MQTT, and KNX light devices. Translates generic commands to each
- * backend's native IPS API.
+ * Zigbee2MQTT, KNX, and HomeMatic light devices. Translates generic commands
+ * to each backend's native IPS API.
  *
  * Backends:
  *   - DMX:          DMX_SetValue() / DMX_FadeChannel() via IPS built-in DMX module
  *   - Shelly:       RequestAction() on variables created by Schnittcher/IPS-Shelly
  *   - Zigbee2MQTT:  RequestAction() on variables created by Schnittcher/IPS-Zigbee2MQTT
  *   - KNX:          EIB_Switch() / EIB_DimValue() via IPS built-in KNX module
+ *   - HomeMatic:    HM_WriteValueBoolean() / HM_WriteValueFloat() via IPS built-in HomeMatic module
+ *     - HmIP (4):       HmIP-PDT, HmIP-FDT, HmIP-BSL
+ *     - Funk (5):       HM-LC-Dim1TPBU-FM, HM-LC-Dim1T-FM, HM-LC-Sw1-Pl-2
+ *     - Wired (6):      HMW-LC-Dim1L-DR, HMW-IO-12-Sw7-DR
  *
  * Public API (callable from scripts):
  *   ULIGHT_SetPower($id, bool $on)
@@ -26,6 +30,9 @@ class LightDevice extends IPSModuleStrict
     const BACKEND_SHELLY       = 1;
     const BACKEND_ZIGBEE2MQTT  = 2;
     const BACKEND_KNX          = 3;
+    const BACKEND_HMIP         = 4;
+    const BACKEND_HMRF         = 5;
+    const BACKEND_HMWIRED      = 6;
 
     public function Create(): void
     {
@@ -48,6 +55,11 @@ class LightDevice extends IPSModuleStrict
         $this->RegisterPropertyInteger('KNXInstanceID', 0);
         $this->RegisterPropertyString('KNXSwitchAddress', '');
         $this->RegisterPropertyString('KNXDimAddress', '');
+
+        // --- HomeMatic backends (IP, Funk, Wired — shared API) ---
+        $this->RegisterPropertyInteger('HMInstanceID', 0);
+        $this->RegisterPropertyInteger('HMDeviceID', 0);
+        $this->RegisterPropertyFloat('HMFadeTime', 0.0);  // RAMP_TIME in seconds, 0 = instant
 
         // --- IPS variables exposed to user ---
         $this->RegisterVariableBoolean('Power', $this->Translate('Power'), '~Switch', 1);
@@ -114,6 +126,21 @@ class LightDevice extends IPSModuleStrict
                     return;
                 }
                 break;
+
+            case self::BACKEND_HMIP:
+            case self::BACKEND_HMRF:
+            case self::BACKEND_HMWIRED:
+                $hmInstanceID = $this->ReadPropertyInteger('HMInstanceID');
+                if ($hmInstanceID === 0 || !IPS_InstanceExists($hmInstanceID)) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                $hmDeviceID = $this->ReadPropertyInteger('HMDeviceID');
+                if ($hmDeviceID === 0 || !IPS_InstanceExists($hmDeviceID)) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                break;
         }
 
         $this->SetStatus(102);  // Active
@@ -172,6 +199,15 @@ class LightDevice extends IPSModuleStrict
                     EIB_Switch($switchAddr, $on);
                 }
                 break;
+
+            case self::BACKEND_HMIP:
+            case self::BACKEND_HMRF:
+            case self::BACKEND_HMWIRED:
+                $hmDeviceID = $this->ReadPropertyInteger('HMDeviceID');
+                if ($hmDeviceID > 0 && IPS_InstanceExists($hmDeviceID)) {
+                    HM_WriteValueBoolean($hmDeviceID, 'STATE', $on);
+                }
+                break;
         }
 
         $this->SetValue('Power', $on);
@@ -217,6 +253,19 @@ class LightDevice extends IPSModuleStrict
                     EIB_DimValue($dimAddr, $level);
                 }
                 break;
+
+            case self::BACKEND_HMIP:
+            case self::BACKEND_HMRF:
+            case self::BACKEND_HMWIRED:
+                $hmDeviceID = $this->ReadPropertyInteger('HMDeviceID');
+                if ($hmDeviceID > 0 && IPS_InstanceExists($hmDeviceID)) {
+                    $fadeTime = $this->ReadPropertyFloat('HMFadeTime');
+                    if ($fadeTime > 0) {
+                        HM_WriteValueFloat($hmDeviceID, 'RAMP_TIME', $fadeTime);
+                    }
+                    HM_WriteValueFloat($hmDeviceID, 'LEVEL', $level / 100.0);
+                }
+                break;
         }
 
         $this->SetValue('Brightness', $level);
@@ -231,7 +280,8 @@ class LightDevice extends IPSModuleStrict
     /**
      * Fade to target brightness over given seconds.
      * For DMX: uses native DMX_FadeChannel (ignores configured fade time).
-     * For Shelly/Zigbee2MQTT: instant set (no native fade available).
+     * For HomeMatic: uses RAMP_TIME parameter.
+     * For Shelly/Zigbee2MQTT/KNX: instant set (no native fade available).
      */
     public function FadeTo(int $targetLevel, float $seconds): void
     {
@@ -243,6 +293,18 @@ class LightDevice extends IPSModuleStrict
             $channel  = $this->ReadPropertyInteger('DMXChannel');
             $dmxValue = (int) round($targetLevel * 255 / 100);
             DMX_FadeChannel($dmxID, $channel, $dmxValue, $seconds);
+            $this->SetValue('Brightness', $targetLevel);
+            $this->SetValue('Power', $targetLevel > 0);
+        } elseif ($backendType === self::BACKEND_HMIP
+               || $backendType === self::BACKEND_HMRF
+               || $backendType === self::BACKEND_HMWIRED) {
+            $hmDeviceID = $this->ReadPropertyInteger('HMDeviceID');
+            if ($hmDeviceID > 0 && IPS_InstanceExists($hmDeviceID)) {
+                if ($seconds > 0) {
+                    HM_WriteValueFloat($hmDeviceID, 'RAMP_TIME', $seconds);
+                }
+                HM_WriteValueFloat($hmDeviceID, 'LEVEL', $targetLevel / 100.0);
+            }
             $this->SetValue('Brightness', $targetLevel);
             $this->SetValue('Power', $targetLevel > 0);
         } else {

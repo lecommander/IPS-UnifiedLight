@@ -5,10 +5,13 @@
       "name": "BackendType",
       "caption": "Backend Type",
       "options": [
-        { "caption": "DMX (IPS built-in)",            "value": 0 },
-        { "caption": "Shelly Dimmer (IPS-Shelly)",    "value": 1 },
-        { "caption": "Zigbee2MQTT (IPS-Zigbee2MQTT)", "value": 2 },
-        { "caption": "KNX (IPS built-in)",            "value": 3 }
+        { "caption": "DMX (IPS built-in)",             "value": 0 },
+        { "caption": "Shelly Dimmer (IPS-Shelly)",     "value": 1 },
+        { "caption": "Zigbee2MQTT (IPS-Zigbee2MQTT)",  "value": 2 },
+        { "caption": "KNX (IPS built-in)",             "value": 3 },
+        { "caption": "HomeMatic IP (HmIP)",            "value": 4 },
+        { "caption": "HomeMatic Funk (HM-RF)",         "value": 5 },
+        { "caption": "HomeMatic Wired (HM-Wired)",     "value": 6 }
       ]
     },
     {
@@ -84,6 +87,33 @@
       "name": "KNXDimAddress",
       "caption": "Dim Group Address (e.g. 1/2/4)",
       "visible": "BackendType == 3"
+    },
+    {
+      "type": "Label",
+      "caption": "── HomeMatic Settings (IP, Funk, Wired) ──────────────────────",
+      "visible": "BackendType >= 4 && BackendType <= 6"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "HMInstanceID",
+      "caption": "HomeMatic Instance (CCU)",
+      "visible": "BackendType >= 4 && BackendType <= 6"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "HMDeviceID",
+      "caption": "Device Instance (Dimmer/Switch)",
+      "visible": "BackendType >= 4 && BackendType <= 6"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "HMFadeTime",
+      "caption": "Fade Time / RAMP_TIME (seconds, 0 = instant)",
+      "minimum": 0,
+      "maximum": 60,
+      "digits": 1,
+      "steps": 0.5,
+      "visible": "BackendType >= 4 && BackendType <= 6"
     }
   ],
   "actions": [

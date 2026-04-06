@@ -44,6 +44,12 @@ jobs:
           grep -q "const BACKEND_ZIGBEE2MQTT" LightDevice/module.php
           echo "Checking BACKEND_KNX constant..."
           grep -q "const BACKEND_KNX" LightDevice/module.php
+          echo "Checking BACKEND_HMIP constant..."
+          grep -q "const BACKEND_HMIP" LightDevice/module.php
+          echo "Checking BACKEND_HMRF constant..."
+          grep -q "const BACKEND_HMRF" LightDevice/module.php
+          echo "Checking BACKEND_HMWIRED constant..."
+          grep -q "const BACKEND_HMWIRED" LightDevice/module.php
           echo "All backend constants found."
 
       - name: Check ApplyChanges Validates All Backends
@@ -56,6 +62,12 @@ jobs:
           grep -q "case self::BACKEND_ZIGBEE2MQTT:" LightDevice/module.php
           echo "Checking ApplyChanges validates KNX..."
           grep -q "case self::BACKEND_KNX:" LightDevice/module.php
+          echo "Checking ApplyChanges validates HomeMatic IP..."
+          grep -q "case self::BACKEND_HMIP:" LightDevice/module.php
+          echo "Checking ApplyChanges validates HomeMatic Funk..."
+          grep -q "case self::BACKEND_HMRF:" LightDevice/module.php
+          echo "Checking ApplyChanges validates HomeMatic Wired..."
+          grep -q "case self::BACKEND_HMWIRED:" LightDevice/module.php
           echo "All backends validated in ApplyChanges."
 
       - name: Check RequestAction Handles All Idents

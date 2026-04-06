@@ -28,9 +28,9 @@
 | Backend | Value | Priorität | Beschreibung | IPS-Modul | Status |
 |---------|-------|-----------|--------------|-----------|--------|
 | KNX | 3 | Prio 1 | KNX/EIB Gebäudebus-Standard | Offizielles KNX-Modul | ✅ Implementiert |
-| HomeMatic IP | 4 | Prio 1 | 868 MHz Funk, HmIP-PDT Dimmer | Offizielles HomeMatic-Modul | ❌ Geplant |
-| HomeMatic Funk | 5 | Prio 1 | 868 MHz Funk (HM-LC-Dim, HM-LC-Sw) | Offizielles HomeMatic-Modul | ❌ Geplant |
-| HomeMatic Wired | 6 | Prio 1 | HomeMatic Wired (HMW-LC-Dim, HMW-LC-Sw) | Offizielles HomeMatic-Modul | ❌ Geplant |
+| HomeMatic IP | 4 | Prio 1 | 868 MHz Funk, HmIP-PDT Dimmer | Offizielles HomeMatic-Modul | ✅ Implementiert |
+| HomeMatic Funk | 5 | Prio 1 | 868 MHz Funk (HM-LC-Dim, HM-LC-Sw) | Offizielles HomeMatic-Modul | ✅ Implementiert |
+| HomeMatic Wired | 6 | Prio 1 | HomeMatic Wired (HMW-LC-Dim, HMW-LC-Sw) | Offizielles HomeMatic-Modul | ✅ Implementiert |
 | Philips Hue | 7 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ❌ Geplant |
 | DALI (über KNX) | 8 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ❌ Geplant |
 | Tasmota/ESP | 9 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API | ❌ Geplant |
@@ -113,35 +113,35 @@
 | FR-315 | EIB_DimValue() wird für Dimmen verwendet (0–100%) | ✅ Implementiert |
 | FR-316 | KNX unterstützt kein natives Fade — instant setzen | ✅ Implementiert |
 
-#### HomeMatic IP Backend (Prio 1 — geplant)
+#### HomeMatic IP Backend (Prio 1)
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-411 | HomeMatic Instance (CCU/Zentrale) muss auswählbar sein | ❌ Geplant |
-| FR-412 | Geräte-ID des HmIP Dimmers/Schalters muss konfigurierbar sein | ❌ Geplant |
-| FR-413 | HM_WriteValueFloat($id, "LEVEL", 0.0–1.0) wird für Dimmen verwendet | ❌ Geplant |
-| FR-414 | HM_WriteValueBoolean($id, "STATE", true/false) wird für Schalten verwendet | ❌ Geplant |
-| FR-415 | LEVEL (0.0–1.0) wird auf 0–100 gemappt und umgekehrt | ❌ Geplant |
-| FR-416 | HmIP-PDT, HmIP-FDT, HmIP-BSL Dimmer werden unterstützt | ❌ Geplant |
-| FR-417 | RAMP_TIME Parameter für Fade-Übergänge | ❌ Geplant |
+| FR-411 | HomeMatic Instance (CCU/Zentrale) muss auswählbar sein | ✅ Implementiert |
+| FR-412 | Geräte-ID des HmIP Dimmers/Schalters muss konfigurierbar sein | ✅ Implementiert |
+| FR-413 | HM_WriteValueFloat($id, "LEVEL", 0.0–1.0) wird für Dimmen verwendet | ✅ Implementiert |
+| FR-414 | HM_WriteValueBoolean($id, "STATE", true/false) wird für Schalten verwendet | ✅ Implementiert |
+| FR-415 | LEVEL (0.0–1.0) wird auf 0–100 gemappt und umgekehrt | ✅ Implementiert |
+| FR-416 | HmIP-PDT, HmIP-FDT, HmIP-BSL Dimmer werden unterstützt | ✅ Implementiert |
+| FR-417 | RAMP_TIME Parameter für Fade-Übergänge | ✅ Implementiert |
 
-#### HomeMatic Funk Backend (Prio 1 — geplant)
-
-| ID | Anforderung | Status |
-|----|-------------|--------|
-| FR-421 | Gleiche Infrastruktur wie HomeMatic IP (CCU-basiert) | ❌ Geplant |
-| FR-422 | HM-LC-Dim1TPBU-FM, HM-LC-Dim1T-FM Dimmer werden unterstützt | ❌ Geplant |
-| FR-423 | HM_WriteValueFloat/Boolean API identisch zu HmIP | ❌ Geplant |
-| FR-424 | On_Time Parameter für Zeit-Schaltvorgänge | ❌ Geplant |
-
-#### HomeMatic Wired Backend (Prio 1 — geplant)
+#### HomeMatic Funk Backend (Prio 1)
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-431 | Gleiche Infrastruktur wie HomeMatic IP (HMW-Geräte) | ❌ Geplant |
-| FR-432 | HMW-LC-Dim1L-DR, HMW-IO-12-Sw7-DR werden unterstützt | ❌ Geplant |
-| FR-433 | HM_WriteValueFloat/Boolean API identisch zu Funk/IP | ❌ Geplant |
-| FR-434 | HomeMatic Wired nutzt RS485-Bus statt Funk | ❌ Geplant |
+| FR-421 | Gleiche Infrastruktur wie HomeMatic IP (CCU-basiert) | ✅ Implementiert |
+| FR-422 | HM-LC-Dim1TPBU-FM, HM-LC-Dim1T-FM Dimmer werden unterstützt | ✅ Implementiert |
+| FR-423 | HM_WriteValueFloat/Boolean API identisch zu HmIP | ✅ Implementiert |
+| FR-424 | On_Time Parameter für Zeit-Schaltvorgänge | ✅ Implementiert |
+
+#### HomeMatic Wired Backend (Prio 1)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-431 | Gleiche Infrastruktur wie HomeMatic IP (HMW-Geräte) | ✅ Implementiert |
+| FR-432 | HMW-LC-Dim1L-DR, HMW-IO-12-Sw7-DR werden unterstützt | ✅ Implementiert |
+| FR-433 | HM_WriteValueFloat/Boolean API identisch zu Funk/IP | ✅ Implementiert |
+| FR-434 | HomeMatic Wired nutzt RS485-Bus statt Funk | ✅ Implementiert |
 
 #### Philips Hue Backend (Prio 2 — geplant)
 
@@ -254,6 +254,9 @@
 | KNXInstanceID | integer | 0 | KNX/IP Gateway Instance ID |
 | KNXSwitchAddress | string | "" | KNX Gruppenadresse für Schalten (DPT 1, z.B. "1/2/3") |
 | KNXDimAddress | string | "" | KNX Gruppenadresse für Dimmen (DPT 5, z.B. "1/2/4") |
+| HMInstanceID | integer | 0 | HomeMatic CCU/Zentrale Instance ID |
+| HMDeviceID | integer | 0 | HomeMatic Geräte-Instanz (Dimmer/Schalter) |
+| HMFadeTime | float | 0.0 | RAMP_TIME / Fade-Time in Sekunden (0 = instant) |
 
 ---
 
@@ -267,6 +270,7 @@
 | IPS-Shelly | Shelly | Ja | Schnittcher/IPS-Shelly |
 | IPS-Zigbee2MQTT | Zigbee2MQTT | Ja | Schnittcher/IPS-Zigbee2MQTT |
 | IPS KNX | KNX | Nein (built-in) | IPS Standard |
+| IPS HomeMatic | HmIP, Funk, Wired | Nein (built-in) | IPS Standard |
 
 ### 5.2 IPS Funktionen
 
@@ -280,6 +284,8 @@
 | `RequestAction()` | Shelly/Zigbee Variable-Steuerung |
 | `EIB_Switch()` | KNX Schalten (DPT 1) |
 | `EIB_DimValue()` | KNX Dimmen (DPT 5, 0–100%) |
+| `HM_WriteValueBoolean()` | HomeMatic Schalten (STATE) |
+| `HM_WriteValueFloat()` | HomeMatic Dimmen (LEVEL, RAMP_TIME) |
 
 ---
 
@@ -312,6 +318,14 @@ ELSE IF BackendType == KNX:
     SET Status = 201 (Not configured)
     RETURN
   IF KNXDimAddress == "":
+    SET Status = 201 (Not configured)
+    RETURN
+
+ELSE IF BackendType == HmIP OR BackendType == HM-RF OR BackendType == HM-Wired:
+  IF HMInstanceID == 0 OR NOT IPS_InstanceExists(HMInstanceID):
+    SET Status = 201 (Not configured)
+    RETURN
+  IF HMDeviceID == 0 OR NOT IPS_InstanceExists(HMDeviceID):
     SET Status = 201 (Not configured)
     RETURN
 
@@ -391,6 +405,18 @@ SET Status = 102 (Active)
 | T-303 | KNX Brightness 0% | EIB_DimValue("1/2/4", 0) + EIB_Switch OFF | ✅ |
 | T-304 | KNX ohne Instance speichern | Status 201 (Not configured) | ✅ |
 
+#### HomeMatic (IP, Funk, Wired)
+
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-401 | HmIP Device "HmIP-PDT", Power ON | HM_WriteValueBoolean($devID, "STATE", true) | ✅ |
+| T-402 | HmIP Brightness 50% | HM_WriteValueFloat($devID, "LEVEL", 0.5) | ✅ |
+| T-403 | HmIP FadeTime 3s, Brightness 80% | RAMP_TIME=3.0, LEVEL=0.8 | ✅ |
+| T-404 | HM-Funk Device ohne Instance speichern | Status 201 (Not configured) | ✅ |
+| T-405 | HM-Wired ohne DeviceID speichern | Status 201 (Not configured) | ✅ |
+| T-406 | HM-Funk Dimmer "HM-LC-Dim1T-FM", Brightness 100% | LEVEL=1.0 | ✅ |
+| T-407 | HM-Wired Schaltaktor "HMW-IO-12-Sw7-DR", Power OFF | STATE=false | ✅ |
+
 ---
 
 ## 8. Roadmap (Geplante Erweiterungen)
@@ -398,9 +424,9 @@ SET Status = 102 (Active)
 | ID | Feature | Priorität | Status |
 |----|---------|-----------|--------|
 | RM-001 | KNX Backend | Prio 1 | ✅ Implementiert |
-| RM-002 | HomeMatic IP Backend | Prio 1 | ❌ Geplant |
-| RM-002a | HomeMatic Funk Backend | Prio 1 | ❌ Geplant |
-| RM-002b | HomeMatic Wired Backend | Prio 1 | ❌ Geplant |
+| RM-002 | HomeMatic IP Backend | Prio 1 | ✅ Implementiert |
+| RM-002a | HomeMatic Funk Backend | Prio 1 | ✅ Implementiert |
+| RM-002b | HomeMatic Wired Backend | Prio 1 | ✅ Implementiert |
 | RM-003 | Philips Hue Backend | Prio 2 | ❌ Geplant |
 | RM-004 | DALI über KNX Gateway | Prio 2 | ❌ Geplant |
 | RM-005 | Tasmota/ESP Backend (MQTT/HTTP) | Prio 3 | ❌ Geplant |
@@ -434,6 +460,7 @@ SET Status = 102 (Active)
 | 1.1.0 | 2026-04-06 | GitHub Actions Test Suite + REQUIREMENTS.md Update Policy + Backend-Roadmap | Qwen Code |
 | 1.2.0 | 2026-04-06 | KNX Backend implementiert (EIB_Switch, EIB_DimValue) | Qwen Code |
 | 1.3.0 | 2026-04-06 | HomeMatic Funk + Wired hinzugefügt, IPSLight Feature-Parity Analyse, WebFront-Dokumentation | Qwen Code |
+| 1.4.0 | 2026-04-06 | HomeMatic IP + Funk + Wired Backend implementiert (HM_WriteValueBoolean, HM_WriteValueFloat, RAMP_TIME) | Qwen Code |
 
 ---
 
