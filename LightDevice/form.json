@@ -5,9 +5,10 @@
       "name": "BackendType",
       "caption": "Backend Type",
       "options": [
-        { "caption": "DMX (IPS built-in)",         "value": 0 },
-        { "caption": "Shelly Dimmer (IPS-Shelly)",  "value": 1 },
-        { "caption": "Zigbee2MQTT (IPS-Zigbee2MQTT)", "value": 2 }
+        { "caption": "DMX (IPS built-in)",            "value": 0 },
+        { "caption": "Shelly Dimmer (IPS-Shelly)",    "value": 1 },
+        { "caption": "Zigbee2MQTT (IPS-Zigbee2MQTT)", "value": 2 },
+        { "caption": "KNX (IPS built-in)",            "value": 3 }
       ]
     },
     {
@@ -53,13 +54,36 @@
       "type": "SelectVariable",
       "name": "PowerVariableID",
       "caption": "Power Variable (boolean, on/off)",
-      "visible": "BackendType > 0"
+      "visible": "BackendType > 0 && BackendType < 3"
     },
     {
       "type": "SelectVariable",
       "name": "BrightnessVariableID",
       "caption": "Brightness Variable (integer, 0–100)",
-      "visible": "BackendType > 0"
+      "visible": "BackendType > 0 && BackendType < 3"
+    },
+    {
+      "type": "Label",
+      "caption": "── KNX Settings (only for Backend Type = KNX) ─────────────────",
+      "visible": "BackendType == 3"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "KNXInstanceID",
+      "caption": "KNX Instance",
+      "visible": "BackendType == 3"
+    },
+    {
+      "type": "TextField",
+      "name": "KNXSwitchAddress",
+      "caption": "Switch Group Address (e.g. 1/2/3)",
+      "visible": "BackendType == 3"
+    },
+    {
+      "type": "TextField",
+      "name": "KNXDimAddress",
+      "caption": "Dim Group Address (e.g. 1/2/4)",
+      "visible": "BackendType == 3"
     }
   ],
   "actions": [
