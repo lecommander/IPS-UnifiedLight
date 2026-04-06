@@ -184,48 +184,67 @@ Zeige dem Nutzer die Zusammenfassung und frage: **"Soll ich die Änderungen comm
 
 Falls ja:
 - Committen mit aussagekräftiger Commit-Message (Conventional Commits Format)
-- Wenn ein Pull Request erstellt werden soll, muss die PR-Beschreibung folgende Struktur haben:
 
-#### PR-Beschreibung muss enthalten:
+### 4.4 Pull Request erstellen (falls gewünscht)
+
+**WICHTIG: PR-Beschreibungen dürfen KEINE Emojis enthalten.** Verwende ausschließlich technische, präzise Sprache.
+
+#### PR-Beschreibung Format
+
+Jede PR-Beschreibung MUSS diese drei Sektionen enthalten:
+
 ```markdown
 ## Summary
 
-[Eine präzise, technische Zusammenfassung der Änderungen in 2-3 Sätzen.
-Beschreibe WAS geändert wurde und WARUM — ohne Füllwörter und ohne Emojis.]
+[Ein präziser, technischer Absatz von 2-3 Sätzen. Beschreibe WAS geändert wurde und WARUM. Keine Füllwörter. Keine Emojis.]
 
 ## Changes
 
-### [Komponente/Datei] — [Kurze Beschreibung]
-- [Konkrete Änderung 1: Was wurde geändert und welcher Effekt hat das?]
-- [Konkrete Änderung 2]
+### [Komponente] — [Kurze Beschreibung]
+- [Konkrete Änderung: Was wurde geändert und welchen Effekt hat das?]
+- [Weitere Änderung]
 
-### [Komponente/Datei] — [Kurze Beschreibung]
+### [Komponente] — [Kurze Beschreibung]
 - [Änderung]
 
 ## Why These Changes Matter
 
-[Technische Begründung: Warum sind diese Änderungen sinnvoll oder notwendig?
-Bezug zu Anforderungen, Bug Reports oder UX-Verbesserungen herstellen.
-Keine Emojis, keine Marketing-Sprache.]
+[Technische Begründung: Warum ist diese Änderung notwendig oder sinnvoll? Beziehe dich auf Requirements, Bug Reports oder UX-Verbesserungen. Keine Emojis. Keine Marketing-Sprache.]
 ```
 
-**PR-Beschreibung Regeln:**
-- KEINE Emojis in PR-Titeln oder -Beschreibungen (auch nicht ✅, 🎉, , etc.)
-- KEINE rein dekorativen Elemente ohne informativen Wert
-- Jede Änderung muss technisch beschrieben werden (was + warum)
-- Bezug zu Requirements oder Issues herstellen wenn vorhanden
-- Die Beschreibung muss für einen Reviewer ausreichend sein, um die Änderungen ohne Code zu verstehen
+#### PR-Erstellung Workflow
 
-### 4.4 PR erstellen (falls gewünscht)
-Wenn der Nutzer einen PR möchte:
+Wenn der Nutzer einen PR erstellen möchte, folge diesem Ablauf:
+
+**Schritt 1: Feature-Branch erstellen und pushen**
 ```bash
-# Feature-Branch erstellen und pushen
-git checkout -b feat/[kurzer-slug]
+git checkout -b feat/[kurzer-slug] [base-branch]
 git push -u origin feat/[kurzer-slug]
-
-# PR mit ausführlicher Beschreibung erstellen
-gh pr create --base master --head feat/[slug] --title "[conventional commit prefix]: [Titel]" --body "[ausführliche Beschreibung wie oben]"
 ```
+
+**Schritt 2: PR-Body als Datei schreiben**
+Erstelle die PR-Beschreibung in einer temporären Datei. Nutze `write_file` um den Body in `.qwen/_pr_body.md` zu schreiben. Das vermeidet Shell-Escaping-Probleme mit `gh pr create --body`.
+
+**Schritt 3: PR mit Body-Datei erstellen**
+```bash
+gh pr create --base [base-branch] --head feat/[slug] --title "[type]: [Titel]" --body-file .qwen/_pr_body.md
+```
+
+**Schritt 4: Temporäre Datei löschen**
+```bash
+rm .qwen/_pr_body.md
+```
+
+#### Qualitäts-Checkliste vor PR-Erstellung
+
+Bevor du den PR erstellst, prüfe:
+- [ ] Titel folgt Conventional Commits Format (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`)
+- [ ] Summary beschreibt WAS und WARUM in 2-3 Sätzen
+- [ ] Changes-Sektion listet jede Änderung mit Komponente und Effekt
+- [ ] Why These Changes Matter liefert technische Begründung
+- [ ] KEINE Emojis im Titel oder der Beschreibung
+- [ ] Kein Marketing-Jargon oder Füllwörter
+- [ ] Bezug zu Requirements oder Issues wenn vorhanden
 
 ---
 
