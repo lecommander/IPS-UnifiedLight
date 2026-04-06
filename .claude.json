@@ -1,0 +1,29 @@
+{
+  "name": "IPS-UnifiedLight Development",
+  "description": "Development workflow agent for IPS-UnifiedLight module",
+  "version": "1.0.0",
+  "commands": [
+    {
+      "name": "ips-dev",
+      "title": "IPS Development Workflow",
+      "description": "Structured 4-phase workflow for implementing features and fixes in IPS-UnifiedLight",
+      "rules": "./.claude/commands/ips-dev.md",
+      "invocationPrefix": "/ips-dev"
+    }
+  ],
+  "conventions": {
+    "language": "PHP",
+    "framework": "IP-Symcon Module",
+    "mainFiles": [
+      "LightDevice/module.php",
+      "LightDevice/form.json",
+      "LightDevice/module.json",
+      "README.md"
+    ],
+    "supportedBackends": [
+      "DMX (IPS built-in)",
+      "Shelly Dimmer (IPS-Shelly)",
+      "Zigbee2MQTT (IPS-Zigbee2MQTT)"
+    ]
+  }
+}
