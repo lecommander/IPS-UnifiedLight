@@ -183,7 +183,68 @@ git diff
 Zeige dem Nutzer die Zusammenfassung und frage: **"Soll ich die Änderungen commiten? (ja/nein)"**
 
 Falls ja:
-- Committen und Tag erstellen für Release
+- Committen mit aussagekräftiger Commit-Message (Conventional Commits Format)
+
+### 4.4 Pull Request erstellen (falls gewünscht)
+
+**WICHTIG: PR-Beschreibungen dürfen KEINE Emojis enthalten.** Verwende ausschließlich technische, präzise Sprache.
+
+#### PR-Beschreibung Format
+
+Jede PR-Beschreibung MUSS diese drei Sektionen enthalten:
+
+```markdown
+## Summary
+
+[Ein präziser, technischer Absatz von 2-3 Sätzen. Beschreibe WAS geändert wurde und WARUM. Keine Füllwörter. Keine Emojis.]
+
+## Changes
+
+### [Komponente] — [Kurze Beschreibung]
+- [Konkrete Änderung: Was wurde geändert und welchen Effekt hat das?]
+- [Weitere Änderung]
+
+### [Komponente] — [Kurze Beschreibung]
+- [Änderung]
+
+## Why These Changes Matter
+
+[Technische Begründung: Warum ist diese Änderung notwendig oder sinnvoll? Beziehe dich auf Requirements, Bug Reports oder UX-Verbesserungen. Keine Emojis. Keine Marketing-Sprache.]
+```
+
+#### PR-Erstellung Workflow
+
+Wenn der Nutzer einen PR erstellen möchte, folge diesem Ablauf:
+
+**Schritt 1: Feature-Branch erstellen und pushen**
+```bash
+git checkout -b feat/[kurzer-slug] [base-branch]
+git push -u origin feat/[kurzer-slug]
+```
+
+**Schritt 2: PR-Body als Datei schreiben**
+Erstelle die PR-Beschreibung in einer temporären Datei. Nutze `write_file` um den Body in `.qwen/_pr_body.md` zu schreiben. Das vermeidet Shell-Escaping-Probleme mit `gh pr create --body`.
+
+**Schritt 3: PR mit Body-Datei erstellen**
+```bash
+gh pr create --base [base-branch] --head feat/[slug] --title "[type]: [Titel]" --body-file .qwen/_pr_body.md
+```
+
+**Schritt 4: Temporäre Datei löschen**
+```bash
+rm .qwen/_pr_body.md
+```
+
+#### Qualitäts-Checkliste vor PR-Erstellung
+
+Bevor du den PR erstellst, prüfe:
+- [ ] Titel folgt Conventional Commits Format (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`)
+- [ ] Summary beschreibt WAS und WARUM in 2-3 Sätzen
+- [ ] Changes-Sektion listet jede Änderung mit Komponente und Effekt
+- [ ] Why These Changes Matter liefert technische Begründung
+- [ ] KEINE Emojis im Titel oder der Beschreibung
+- [ ] Kein Marketing-Jargon oder Füllwörter
+- [ ] Bezug zu Requirements oder Issues wenn vorhanden
 
 ---
 
