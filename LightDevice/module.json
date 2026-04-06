@@ -1,0 +1,12 @@
+{
+  "id": "{8B3F2A1E-7C6D-4E9B-A5F4-1E2D3C4B5A6F}",
+  "name": "LightDevice",
+  "type": 3,
+  "vendor": "Seb",
+  "aliases": ["Unified Light", "Light Controller"],
+  "url": "https://github.com/lecommander/IPS-UnifiedLight",
+  "parentRequirements": [],
+  "childRequirements": [],
+  "implemented": [],
+  "prefix": "ULIGHT"
+}

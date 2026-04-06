@@ -1,0 +1,93 @@
+{
+  "elements": [
+    {
+      "type": "Select",
+      "name": "BackendType",
+      "caption": "Backend Type",
+      "options": [
+        { "caption": "DMX (IPS built-in)",         "value": 0 },
+        { "caption": "Shelly Dimmer (IPS-Shelly)",  "value": 1 },
+        { "caption": "Zigbee2MQTT (IPS-Zigbee2MQTT)", "value": 2 }
+      ]
+    },
+    {
+      "type": "Label",
+      "caption": "── DMX Settings (only for Backend Type = DMX) ──────────────"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "DMXInstanceID",
+      "caption": "DMX Instance"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "DMXChannel",
+      "caption": "DMX Channel",
+      "minimum": 1,
+      "maximum": 512
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "DMXFadeTime",
+      "caption": "Fade Time (seconds, 0 = instant)",
+      "minimum": 0,
+      "maximum": 30,
+      "digits": 1,
+      "steps": 0.5
+    },
+    {
+      "type": "Label",
+      "caption": "── Shelly / Zigbee2MQTT Settings (only for those backend types) ──"
+    },
+    {
+      "type": "Label",
+      "caption": "Select the Power and Brightness variables from the device instance in the object tree."
+    },
+    {
+      "type": "SelectVariable",
+      "name": "PowerVariableID",
+      "caption": "Power Variable (boolean, on/off)"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "BrightnessVariableID",
+      "caption": "Brightness Variable (integer, 0–100)"
+    }
+  ],
+  "actions": [
+    {
+      "type": "TestCenter"
+    },
+    {
+      "type": "Label",
+      "caption": "Quick Test:"
+    },
+    {
+      "type": "Button",
+      "caption": "Turn On (100%)",
+      "onClick": "ULIGHT_SetBrightness($id, 100);"
+    },
+    {
+      "type": "Button",
+      "caption": "Turn Off",
+      "onClick": "ULIGHT_SetPower($id, false);"
+    },
+    {
+      "type": "Button",
+      "caption": "50% Brightness",
+      "onClick": "ULIGHT_SetBrightness($id, 50);"
+    }
+  ],
+  "status": [
+    {
+      "code": 102,
+      "icon": "Active",
+      "caption": "Device configured and active"
+    },
+    {
+      "code": 201,
+      "icon": "Inactive",
+      "caption": "Not configured — check Backend Type and Instance/Variable settings"
+    }
+  ]
+}
