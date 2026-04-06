@@ -183,7 +183,49 @@ git diff
 Zeige dem Nutzer die Zusammenfassung und frage: **"Soll ich die Änderungen commiten? (ja/nein)"**
 
 Falls ja:
-- Committen und Tag erstellen für Release
+- Committen mit aussagekräftiger Commit-Message (Conventional Commits Format)
+- Wenn ein Pull Request erstellt werden soll, muss die PR-Beschreibung folgende Struktur haben:
+
+#### PR-Beschreibung muss enthalten:
+```markdown
+## Summary
+
+[Eine präzise, technische Zusammenfassung der Änderungen in 2-3 Sätzen.
+Beschreibe WAS geändert wurde und WARUM — ohne Füllwörter und ohne Emojis.]
+
+## Changes
+
+### [Komponente/Datei] — [Kurze Beschreibung]
+- [Konkrete Änderung 1: Was wurde geändert und welcher Effekt hat das?]
+- [Konkrete Änderung 2]
+
+### [Komponente/Datei] — [Kurze Beschreibung]
+- [Änderung]
+
+## Why These Changes Matter
+
+[Technische Begründung: Warum sind diese Änderungen sinnvoll oder notwendig?
+Bezug zu Anforderungen, Bug Reports oder UX-Verbesserungen herstellen.
+Keine Emojis, keine Marketing-Sprache.]
+```
+
+**PR-Beschreibung Regeln:**
+- KEINE Emojis in PR-Titeln oder -Beschreibungen (auch nicht ✅, 🎉, , etc.)
+- KEINE rein dekorativen Elemente ohne informativen Wert
+- Jede Änderung muss technisch beschrieben werden (was + warum)
+- Bezug zu Requirements oder Issues herstellen wenn vorhanden
+- Die Beschreibung muss für einen Reviewer ausreichend sein, um die Änderungen ohne Code zu verstehen
+
+### 4.4 PR erstellen (falls gewünscht)
+Wenn der Nutzer einen PR möchte:
+```bash
+# Feature-Branch erstellen und pushen
+git checkout -b feat/[kurzer-slug]
+git push -u origin feat/[kurzer-slug]
+
+# PR mit ausführlicher Beschreibung erstellen
+gh pr create --base master --head feat/[slug] --title "[conventional commit prefix]: [Titel]" --body "[ausführliche Beschreibung wie oben]"
+```
 
 ---
 
