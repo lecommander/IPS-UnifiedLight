@@ -15,11 +15,24 @@
 
 ### 1.1 Unterstützte Backends
 
+#### Aktuell implementiert
+
 | Backend | Value | Beschreibung |
 |---------|-------|--------------|
 | DMX | 0 | IPS built-in DMX Modul |
 | Shelly Dimmer | 1 | Schnittcher/IPS-Shelly Modul |
 | Zigbee2MQTT | 2 | Schnittcher/IPS-Zigbee2MQTT Modul |
+
+#### Geplante Backends (Priorität 1-3)
+
+| Backend | Value | Priorität | Beschreibung | IPS-Modul |
+|---------|-------|-----------|--------------|-----------|
+| KNX | 3 | Prio 1 | KNX/EIB Gebäudebus-Standard | Offizielles KNX-Modul |
+| HomeMatic IP | 4 | Prio 1 | 868 MHz Funk, HmIP-PDT Dimmer | Offizielles HomeMatic-Modul |
+| Philips Hue | 5 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 |
+| DALI (über KNX) | 6 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway |
+| Tasmota/ESP | 7 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API |
+| WLED | 8 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT |
 
 ---
 
@@ -59,6 +72,64 @@
 | FR-204 | Brightness Variable ist integer (0–100) | ✅ Implementiert |
 | FR-205 | RequestAction() wird für beide Variablen verwendet | ✅ Implementiert |
 | FR-206 | Brightness > 0 schaltet automatisch Power ein | ✅ Implementiert |
+
+#### KNX Backend (Prio 1 — geplant)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-311 | KNX Instance (KNX/IP Gateway) muss auswählbar sein | ❌ Geplant |
+| FR-312 | KNX Gruppenadresse für Schalten (DPT 1) muss konfigurierbar sein | ❌ Geplant |
+| FR-313 | KNX Gruppenadresse für Dimmen (DPT 5) muss konfigurierbar sein | ❌ Geplant |
+| FR-314 | KNX_SetValue() wird für Schalten verwendet | ❌ Geplant |
+| FR-315 | KNX_RequestAction() wird für Dimmen verwendet | ❌ Geplant |
+| FR-316 | Status-Rückmeldung über KNX Gruppenadresse (optional) | ❌ Geplant |
+
+#### HomeMatic IP Backend (Prio 1 — geplant)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-411 | HomeMatic Instance muss auswählbar sein | ❌ Geplant |
+| FR-412 | Geräte-ID des HmIP-PDT Dimmers muss konfigurierbar sein | ❌ Geplant |
+| FR-413 | HM_WriteValueFloat() wird für Dimmen verwendet | ❌ Geplant |
+| FR-414 | RequestAction() auf Power-Variable des Dimmers | ❌ Geplant |
+| FR-415 | LEVEL Variable (0.0–1.0) wird auf 0–100 gemappt | ❌ Geplant |
+
+#### Philips Hue Backend (Prio 2 — geplant)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-511 | Hue Bridge Instance muss auswählbar sein | ❌ Geplant |
+| FR-512 | Light ID (1–63) muss konfigurierbar sein | ❌ Geplant |
+| FR-513 | Hue_SetLight() wird für Schalten/Dimmen verwendet | ❌ Geplant |
+| FR-514 | on-State (bool) und bri (0–254) werden verwendet | ❌ Geplant |
+| FR-515 | Transitiontime-Parameter für Fade (optional) | ❌ Geplant |
+
+#### DALI über KNX Backend (Prio 2 — geplant)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-611 | Nutzt KNX Backend Infrastruktur | ❌ Geplant |
+| FR-612 | DALI-spezifische Gruppenadressen (DPT 3 für relative Dimmung) | ❌ Geplant |
+| FR-613 | Gateway-Typ auswählbar (BEG Luxomat, Lunatone, etc.) | ❌ Geplant |
+
+#### Tasmota/ESP Backend (Prio 3 — geplant)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-711 | MQTT Broker Instance muss auswählbar sein | ❌ Geplant |
+| FR-712 | MQTT Topic (cmt/tasmota/POWER, cmt/tasmota/Dimmer) konfigurierbar | ❌ Geplant |
+| FR-713 | Alternativ: HTTP API URL + Password konfigurierbar | ❌ Geplant |
+| FR-714 | MQTT_Publish() oder HTTP_Request() für Steuerung | ❌ Geplant |
+| FR-715 | Status-Rückmeldung über MQTT State-Topic | ❌ Geplant |
+
+#### WLED Backend (Prio 3 — geplant)
+
+| ID | Anforderung | Status |
+|----|-------------|--------|
+| FR-811 | HTTP API URL oder MQTT Topic konfigurierbar | ❌ Geplant |
+| FR-812 | WLED JSON API: POST /json/state mit {"on":true,"bri":128} | ❌ Geplant |
+| FR-813 | Fade-Parameter über WLED Transition-Feld | ❌ Geplant |
+| FR-814 | Alternativ: MQTT mit wled/[device]/api | ❌ Geplant |
 
 ### 2.3 Formular-Anforderungen
 
@@ -186,41 +257,55 @@ SET Status = 102 (Active)
 
 ## 7. Test-Spezifikation
 
-### 7.1 Manuelle Tests
+### 7.1 Automatisierte Tests (GitHub Actions)
 
-| Test-ID | Beschreibung | Erwartetes Ergebnis |
-|---------|--------------|---------------------|
-| T-001 | Neue Instanz erstellen | Formular wird korrekt angezeigt |
-| T-002 | Backend zu DMX wechseln | Nur DMX Settings sichtbar |
-| T-003 | Backend zu Shelly wechseln | Nur Shelly/Zigbee Settings sichtbar |
-| T-004 | DMX ohne Instance speichern | Status 201 (Not configured) |
-| T-005 | Shelly ohne Power Variable speichern | Status 201 (Not configured) |
-| T-006 | Gültige DMX Konfiguration speichern | Status 102 (Active) |
-| T-007 | Power über GUI togglen | Licht schaltet ein/aus |
-| T-008 | Brightness auf 50% setzen | Licht dimmt auf 50% |
-| T-009 | Brightness auf 0 setzen | Power wird automatisch ausgeschaltet |
-| T-010 | ULIGHT_SetBrightness() per Script aufrufen | Licht dimmt korrekt |
-| T-011 | ULIGHT_FadeTo() per Script aufrufen (DMX) | Fade wird durchgeführt |
-| T-012 | Ungültigen Ident per RequestAction senden | Exception wird geworfen |
+**Workflow:** `.github/workflows/test.yml` — wird bei jedem Push und Pull Request auf `master` ausgeführt.
 
-### 7.2 Backend-spezifische Tests
+| Job | Prüfung | Tools |
+|-----|---------|-------|
+| PHP Syntax | `php -l LightDevice/module.php` | PHP 7.4 |
+| JSON Validation | `python -m json.tool` für form.json + module.json | Python 3 |
+| Structure Check | Backend-Konstanten, ApplyChanges Cases, RequestAction Idents, Public API | grep |
+| Form Validation | BackendType Select mit min. 3 Optionen, Status-Codes 102+201 | Python json |
+| Requirements Check | docs/REQUIREMENTS.md existiert mit allen Pflicht-Sektionen | grep |
+
+### 7.2 Manuelle Tests
+
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-001 | Neue Instanz erstellen | Formular wird korrekt angezeigt | ✅ |
+| T-002 | Backend zu DMX wechseln | Nur DMX Settings sichtbar | ✅ |
+| T-003 | Backend zu Shelly wechseln | Nur Shelly/Zigbee Settings sichtbar | ✅ |
+| T-004 | DMX ohne Instance speichern | Status 201 (Not configured) | ✅ |
+| T-005 | Shelly ohne Power Variable speichern | Status 201 (Not configured) | ✅ |
+| T-006 | Gültige DMX Konfiguration speichern | Status 102 (Active) | ✅ |
+| T-007 | DMX mit ungültigem Channel (0 oder 513) speichern | Status 201 (Not configured) | ✅ |
+| T-008 | Shelly ohne Brightness Variable speichern | Status 201 (Not configured) | ✅ |
+| T-009 | Power über GUI togglen | Licht schaltet ein/aus | ✅ |
+| T-010 | Brightness auf 50% setzen | Licht dimmt auf 50% | ✅ |
+| T-011 | Brightness auf 0 setzen | Power wird automatisch ausgeschaltet | ✅ |
+| T-012 | ULIGHT_SetBrightness() per Script aufrufen | Licht dimmt korrekt | ✅ |
+| T-013 | ULIGHT_FadeTo() per Script aufrufen (DMX) | Fade wird durchgeführt | ✅ |
+| T-014 | Ungültigen Ident per RequestAction senden | Exception wird geworfen | ✅ |
+
+### 7.3 Backend-spezifische Tests
 
 #### DMX
 
-| Test-ID | Beschreibung | Erwartetes Ergebnis |
-|---------|--------------|---------------------|
-| T-101 | DMX Channel 1, Brightness 100% | DMX Wert 255 auf Channel 1 |
-| T-102 | DMX Fade Time 0, Brightness ändern | Instantanes Schalten |
-| T-103 | DMX Fade Time 3s, Brightness ändern | Fade über 3 Sekunden |
-| T-104 | DMX Channel 512 | Höchster Channel funktioniert |
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-101 | DMX Channel 1, Brightness 100% | DMX Wert 255 auf Channel 1 | ✅ |
+| T-102 | DMX Fade Time 0, Brightness ändern | Instantanes Schalten | ✅ |
+| T-103 | DMX Fade Time 3s, Brightness ändern | Fade über 3 Sekunden | ✅ |
+| T-104 | DMX Channel 512 | Höchster Channel funktioniert | ✅ |
 
 #### Shelly / Zigbee2MQTT
 
-| Test-ID | Beschreibung | Erwartetes Ergebnis |
-|---------|--------------|---------------------|
-| T-201 | Power Variable setzen | RequestAction auf Power Variable |
-| T-202 | Brightness 50% setzen | RequestAction auf Brightness + Power Variable |
-| T-203 | Brightness 0% setzen | Power Variable wird auf false gesetzt |
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-201 | Power Variable setzen | RequestAction auf Power Variable | ✅ |
+| T-202 | Brightness 50% setzen | RequestAction auf Brightness + Power Variable | ✅ |
+| T-203 | Brightness 0% setzen | Power Variable wird auf false gesetzt | ✅ |
 
 ---
 
@@ -228,12 +313,16 @@ SET Status = 102 (Active)
 
 | ID | Feature | Priorität | Status |
 |----|---------|-----------|--------|
-| RM-001 | RGBW / Color Support (ColorTemp, RGB) | Hoch | ❌ Geplant |
-| RM-002 | LightGroup: Mehrere Instanzen als Szene steuern | Mittel | ❌ Geplant |
-| RM-003 | HomeMatic Dimmer Backend | Niedrig | ❌ Geplant |
-| RM-004 | Transition Time für Shelly/Zigbee2MQTT | Mittel | ❌ Geplant |
-| RM-005 | Unit Tests / Automatisierte Tests | Hoch | ❌ Geplant |
-| RM-006 | Dokumentation auf Deutsch | Mittel | ❌ Geplant |
+| RM-001 | KNX Backend | Prio 1 | ❌ Geplant |
+| RM-002 | HomeMatic IP Backend | Prio 1 | ❌ Geplant |
+| RM-003 | Philips Hue Backend | Prio 2 | ❌ Geplant |
+| RM-004 | DALI über KNX Gateway | Prio 2 | ❌ Geplant |
+| RM-005 | Tasmota/ESP Backend (MQTT/HTTP) | Prio 3 | ❌ Geplant |
+| RM-006 | WLED Backend (HTTP/MQTT) | Prio 3 | ❌ Geplant |
+| RM-007 | RGBW / Color Support (ColorTemp, RGB) | Hoch | ❌ Geplant |
+| RM-008 | LightGroup: Mehrere Instanzen als Szene steuern | Mittel | ❌ Geplant |
+| RM-009 | Transition Time für Shelly/Zigbee2MQTT | Mittel | ❌ Geplant |
+| RM-010 | GitHub Actions Test Suite | Hoch | ❌ Geplant |
 
 ---
 
