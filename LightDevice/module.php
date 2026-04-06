@@ -59,21 +59,36 @@ class LightDevice extends IPSModuleStrict
     {
         parent::ApplyChanges();
 
-        // Validate configuration
+        // Validate configuration — each backend validates only its own required parameters
         $backendType = $this->ReadPropertyInteger('BackendType');
 
-        if ($backendType === self::BACKEND_DMX) {
-            $dmxID = $this->ReadPropertyInteger('DMXInstanceID');
-            if ($dmxID === 0 || !IPS_InstanceExists($dmxID)) {
-                $this->SetStatus(201);  // Inactive — DMX instance not configured
-                return;
-            }
-        } else {
-            $powerVar = $this->ReadPropertyInteger('PowerVariableID');
-            if ($powerVar === 0 || !IPS_VariableExists($powerVar)) {
-                $this->SetStatus(201);  // Inactive — Power variable not configured
-                return;
-            }
+        switch ($backendType) {
+            case self::BACKEND_DMX:
+                $dmxID = $this->ReadPropertyInteger('DMXInstanceID');
+                if ($dmxID === 0 || !IPS_InstanceExists($dmxID)) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                $channel = $this->ReadPropertyInteger('DMXChannel');
+                if ($channel < 1 || $channel > 512) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                break;
+
+            case self::BACKEND_SHELLY:
+            case self::BACKEND_ZIGBEE2MQTT:
+                $powerVar = $this->ReadPropertyInteger('PowerVariableID');
+                if ($powerVar === 0 || !IPS_VariableExists($powerVar)) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                $brightnessVar = $this->ReadPropertyInteger('BrightnessVariableID');
+                if ($brightnessVar === 0 || !IPS_VariableExists($brightnessVar)) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                break;
         }
 
         $this->SetStatus(102);  // Active
