@@ -12,19 +12,22 @@
     },
     {
       "type": "Label",
-      "caption": "── DMX Settings (only for Backend Type = DMX) ──────────────"
+      "caption": "── DMX Settings (only for Backend Type = DMX) ──────────────",
+      "visible": "BackendType == 0"
     },
     {
       "type": "SelectInstance",
       "name": "DMXInstanceID",
-      "caption": "DMX Instance"
+      "caption": "DMX Instance",
+      "visible": "BackendType == 0"
     },
     {
       "type": "NumberSpinner",
       "name": "DMXChannel",
       "caption": "DMX Channel",
       "minimum": 1,
-      "maximum": 512
+      "maximum": 512,
+      "visible": "BackendType == 0"
     },
     {
       "type": "NumberSpinner",
@@ -33,25 +36,30 @@
       "minimum": 0,
       "maximum": 30,
       "digits": 1,
-      "steps": 0.5
+      "steps": 0.5,
+      "visible": "BackendType == 0"
     },
     {
       "type": "Label",
-      "caption": "── Shelly / Zigbee2MQTT Settings (only for those backend types) ──"
+      "caption": "── Shelly / Zigbee2MQTT Settings (only for those backend types) ──",
+      "visible": "BackendType > 0"
     },
     {
       "type": "Label",
-      "caption": "Select the Power and Brightness variables from the device instance in the object tree."
+      "caption": "Select the Power and Brightness variables from the device instance in the object tree.",
+      "visible": "BackendType > 0"
     },
     {
       "type": "SelectVariable",
       "name": "PowerVariableID",
-      "caption": "Power Variable (boolean, on/off)"
+      "caption": "Power Variable (boolean, on/off)",
+      "visible": "BackendType > 0"
     },
     {
       "type": "SelectVariable",
       "name": "BrightnessVariableID",
-      "caption": "Brightness Variable (integer, 0–100)"
+      "caption": "Brightness Variable (integer, 0–100)",
+      "visible": "BackendType > 0"
     }
   ],
   "actions": [
@@ -86,7 +94,7 @@
     },
     {
       "code": 201,
-      "icon": "Inactive",
+      "icon": "Warning",
       "caption": "Not configured — check Backend Type and Instance/Variable settings"
     }
   ]

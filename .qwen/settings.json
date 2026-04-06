@@ -1,0 +1,43 @@
+{
+  "outputLanguage": "German",
+  "workspaceRules": [
+    "Always use todo_write to track multi-step tasks",
+    "Follow PHP IPS Module conventions with proper type hints",
+    "Validate form.json syntax when modifying configuration files",
+    "Use SendDebug for logging instead of raw echo/print",
+    "Set proper status codes (102=active, 201=not configured) on validation failures",
+    "Implement all RequestAction handlers for supported backends",
+    "Never commit without user explicit approval"
+  ],
+  "projectStructure": {
+    "moduleRoot": "LightDevice",
+    "mainFiles": {
+      "php": "LightDevice/module.php",
+      "form": "LightDevice/form.json",
+      "metadata": "LightDevice/module.json",
+      "documentation": "README.md"
+    }
+  },
+  "supportedBackends": [
+    "DMX",
+    "Shelly",
+    "Zigbee2MQTT"
+  ],
+  "codeConventions": {
+    "typeHints": "required_on_public_methods",
+    "logging": "SendDebug",
+    "errorHandling": "try_catch_with_SendDebug_and_SetStatus",
+    "statusCodes": {
+      "102": "Active",
+      "201": "Not configured"
+    }
+  },
+  "$version": 3,
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  }
+}
