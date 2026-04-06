@@ -42,6 +42,8 @@ jobs:
           grep -q "const BACKEND_SHELLY" LightDevice/module.php
           echo "Checking BACKEND_ZIGBEE2MQTT constant..."
           grep -q "const BACKEND_ZIGBEE2MQTT" LightDevice/module.php
+          echo "Checking BACKEND_KNX constant..."
+          grep -q "const BACKEND_KNX" LightDevice/module.php
           echo "All backend constants found."
 
       - name: Check ApplyChanges Validates All Backends
@@ -52,6 +54,8 @@ jobs:
           grep -q "case self::BACKEND_SHELLY:" LightDevice/module.php
           echo "Checking ApplyChanges validates Zigbee2MQTT..."
           grep -q "case self::BACKEND_ZIGBEE2MQTT:" LightDevice/module.php
+          echo "Checking ApplyChanges validates KNX..."
+          grep -q "case self::BACKEND_KNX:" LightDevice/module.php
           echo "All backends validated in ApplyChanges."
 
       - name: Check RequestAction Handles All Idents

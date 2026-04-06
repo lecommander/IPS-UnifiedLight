@@ -25,14 +25,14 @@
 
 #### Geplante Backends (Priorität 1-3)
 
-| Backend | Value | Priorität | Beschreibung | IPS-Modul |
-|---------|-------|-----------|--------------|-----------|
-| KNX | 3 | Prio 1 | KNX/EIB Gebäudebus-Standard | Offizielles KNX-Modul |
-| HomeMatic IP | 4 | Prio 1 | 868 MHz Funk, HmIP-PDT Dimmer | Offizielles HomeMatic-Modul |
-| Philips Hue | 5 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 |
-| DALI (über KNX) | 6 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway |
-| Tasmota/ESP | 7 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API |
-| WLED | 8 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT |
+| Backend | Value | Priorität | Beschreibung | IPS-Modul | Status |
+|---------|-------|-----------|--------------|-----------|--------|
+| KNX | 3 | Prio 1 | KNX/EIB Gebäudebus-Standard | Offizielles KNX-Modul | ✅ Implementiert |
+| HomeMatic IP | 4 | Prio 1 | 868 MHz Funk, HmIP-PDT Dimmer | Offizielles HomeMatic-Modul | ❌ Geplant |
+| Philips Hue | 5 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ❌ Geplant |
+| DALI (über KNX) | 6 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ❌ Geplant |
+| Tasmota/ESP | 7 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API | ❌ Geplant |
+| WLED | 8 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT | ❌ Geplant |
 
 ---
 
@@ -73,16 +73,16 @@
 | FR-205 | RequestAction() wird für beide Variablen verwendet | ✅ Implementiert |
 | FR-206 | Brightness > 0 schaltet automatisch Power ein | ✅ Implementiert |
 
-#### KNX Backend (Prio 1 — geplant)
+#### KNX Backend (Prio 1)
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-311 | KNX Instance (KNX/IP Gateway) muss auswählbar sein | ❌ Geplant |
-| FR-312 | KNX Gruppenadresse für Schalten (DPT 1) muss konfigurierbar sein | ❌ Geplant |
-| FR-313 | KNX Gruppenadresse für Dimmen (DPT 5) muss konfigurierbar sein | ❌ Geplant |
-| FR-314 | KNX_SetValue() wird für Schalten verwendet | ❌ Geplant |
-| FR-315 | KNX_RequestAction() wird für Dimmen verwendet | ❌ Geplant |
-| FR-316 | Status-Rückmeldung über KNX Gruppenadresse (optional) | ❌ Geplant |
+| FR-311 | KNX Instance (KNX/IP Gateway) muss auswählbar sein | ✅ Implementiert |
+| FR-312 | KNX Gruppenadresse für Schalten (DPT 1) muss konfigurierbar sein | ✅ Implementiert |
+| FR-313 | KNX Gruppenadresse für Dimmen (DPT 5) muss konfigurierbar sein | ✅ Implementiert |
+| FR-314 | EIB_Switch() wird für Schalten verwendet | ✅ Implementiert |
+| FR-315 | EIB_DimValue() wird für Dimmen verwendet (0–100%) | ✅ Implementiert |
+| FR-316 | KNX unterstützt kein natives Fade — instant setzen | ✅ Implementiert |
 
 #### HomeMatic IP Backend (Prio 1 — geplant)
 
@@ -202,6 +202,9 @@
 | DMXFadeTime | float | 0.5 | Fade Time in Sekunden |
 | PowerVariableID | integer | 0 | IPS VariableID für Power |
 | BrightnessVariableID | integer | 0 | IPS VariableID für Brightness |
+| KNXInstanceID | integer | 0 | KNX/IP Gateway Instance ID |
+| KNXSwitchAddress | string | "" | KNX Gruppenadresse für Schalten (DPT 1, z.B. "1/2/3") |
+| KNXDimAddress | string | "" | KNX Gruppenadresse für Dimmen (DPT 5, z.B. "1/2/4") |
 
 ---
 
@@ -214,6 +217,7 @@
 | IPS DMX | DMX | Nein (built-in) | IPS Standard |
 | IPS-Shelly | Shelly | Ja | Schnittcher/IPS-Shelly |
 | IPS-Zigbee2MQTT | Zigbee2MQTT | Ja | Schnittcher/IPS-Zigbee2MQTT |
+| IPS KNX | KNX | Nein (built-in) | IPS Standard |
 
 ### 5.2 IPS Funktionen
 
@@ -225,6 +229,8 @@
 | `DMX_SetValue()` | DMX instantanes Schalten |
 | `DMX_FadeChannel()` | DMX Fade-Operation |
 | `RequestAction()` | Shelly/Zigbee Variable-Steuerung |
+| `EIB_Switch()` | KNX Schalten (DPT 1) |
+| `EIB_DimValue()` | KNX Dimmen (DPT 5, 0–100%) |
 
 ---
 
@@ -237,8 +243,26 @@ IF BackendType == DMX:
   IF DMXInstanceID == 0 OR NOT IPS_InstanceExists(DMXInstanceID):
     SET Status = 201 (Not configured)
     RETURN
-ELSE (Shelly/Zigbee2MQTT):
+  IF DMXChannel < 1 OR DMXChannel > 512:
+    SET Status = 201 (Not configured)
+    RETURN
+
+ELSE IF BackendType == Shelly OR BackendType == Zigbee2MQTT:
   IF PowerVariableID == 0 OR NOT IPS_VariableExists(PowerVariableID):
+    SET Status = 201 (Not configured)
+    RETURN
+  IF BrightnessVariableID == 0 OR NOT IPS_VariableExists(BrightnessVariableID):
+    SET Status = 201 (Not configured)
+    RETURN
+
+ELSE IF BackendType == KNX:
+  IF KNXInstanceID == 0 OR NOT IPS_InstanceExists(KNXInstanceID):
+    SET Status = 201 (Not configured)
+    RETURN
+  IF KNXSwitchAddress == "":
+    SET Status = 201 (Not configured)
+    RETURN
+  IF KNXDimAddress == "":
     SET Status = 201 (Not configured)
     RETURN
 
@@ -281,6 +305,8 @@ SET Status = 102 (Active)
 | T-006 | Gültige DMX Konfiguration speichern | Status 102 (Active) | ✅ |
 | T-007 | DMX mit ungültigem Channel (0 oder 513) speichern | Status 201 (Not configured) | ✅ |
 | T-008 | Shelly ohne Brightness Variable speichern | Status 201 (Not configured) | ✅ |
+| T-008a | KNX ohne Switch Address speichern | Status 201 (Not configured) | ✅ |
+| T-008b | KNX ohne Dim Address speichern | Status 201 (Not configured) | ✅ |
 | T-009 | Power über GUI togglen | Licht schaltet ein/aus | ✅ |
 | T-010 | Brightness auf 50% setzen | Licht dimmt auf 50% | ✅ |
 | T-011 | Brightness auf 0 setzen | Power wird automatisch ausgeschaltet | ✅ |
@@ -307,13 +333,22 @@ SET Status = 102 (Active)
 | T-202 | Brightness 50% setzen | RequestAction auf Brightness + Power Variable | ✅ |
 | T-203 | Brightness 0% setzen | Power Variable wird auf false gesetzt | ✅ |
 
+#### KNX
+
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-301 | KNX Switch Address "1/2/3", Power ON | EIB_Switch("1/2/3", true) wird aufgerufen | ✅ |
+| T-302 | KNX Dim Address "1/2/4", Brightness 50% | EIB_DimValue("1/2/4", 50) wird aufgerufen | ✅ |
+| T-303 | KNX Brightness 0% | EIB_DimValue("1/2/4", 0) + EIB_Switch OFF | ✅ |
+| T-304 | KNX ohne Instance speichern | Status 201 (Not configured) | ✅ |
+
 ---
 
 ## 8. Roadmap (Geplante Erweiterungen)
 
 | ID | Feature | Priorität | Status |
 |----|---------|-----------|--------|
-| RM-001 | KNX Backend | Prio 1 | ❌ Geplant |
+| RM-001 | KNX Backend | Prio 1 | ✅ Implementiert |
 | RM-002 | HomeMatic IP Backend | Prio 1 | ❌ Geplant |
 | RM-003 | Philips Hue Backend | Prio 2 | ❌ Geplant |
 | RM-004 | DALI über KNX Gateway | Prio 2 | ❌ Geplant |
@@ -344,7 +379,8 @@ SET Status = 102 (Active)
 | Version | Datum | Änderung | Autor |
 |---------|-------|----------|-------|
 | 1.0.0 | 2026-04-06 | Initiales Requirements-Dokument erstellt | Qwen Code |
-| 1.0.0 | 2026-04-06 | Konditionale Formular-Sichtbarkeit implementiert | Qwen Code |
+| 1.1.0 | 2026-04-06 | GitHub Actions Test Suite + REQUIREMENTS.md Update Policy + Backend-Roadmap | Qwen Code |
+| 1.2.0 | 2026-04-06 | KNX Backend implementiert (EIB_Switch, EIB_DimValue) | Qwen Code |
 
 ---
 

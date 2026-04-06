@@ -4,13 +4,14 @@
  * LightDevice — Unified Light Controller
  *
  * Provides a single interface (Power + Brightness) for DMX, Shelly Dimmer,
- * and Zigbee2MQTT light devices. Translates generic commands to each backend's
- * native IPS API.
+ * Zigbee2MQTT, and KNX light devices. Translates generic commands to each
+ * backend's native IPS API.
  *
  * Backends:
  *   - DMX:          DMX_SetValue() / DMX_FadeChannel() via IPS built-in DMX module
  *   - Shelly:       RequestAction() on variables created by Schnittcher/IPS-Shelly
  *   - Zigbee2MQTT:  RequestAction() on variables created by Schnittcher/IPS-Zigbee2MQTT
+ *   - KNX:          EIB_Switch() / EIB_DimValue() via IPS built-in KNX module
  *
  * Public API (callable from scripts):
  *   ULIGHT_SetPower($id, bool $on)
@@ -24,6 +25,7 @@ class LightDevice extends IPSModuleStrict
     const BACKEND_DMX          = 0;
     const BACKEND_SHELLY       = 1;
     const BACKEND_ZIGBEE2MQTT  = 2;
+    const BACKEND_KNX          = 3;
 
     public function Create(): void
     {
@@ -41,6 +43,11 @@ class LightDevice extends IPSModuleStrict
         // User selects the exact IPS variables directly (avoids ident guessing)
         $this->RegisterPropertyInteger('PowerVariableID', 0);
         $this->RegisterPropertyInteger('BrightnessVariableID', 0);
+
+        // --- KNX backend ---
+        $this->RegisterPropertyInteger('KNXInstanceID', 0);
+        $this->RegisterPropertyString('KNXSwitchAddress', '');
+        $this->RegisterPropertyString('KNXDimAddress', '');
 
         // --- IPS variables exposed to user ---
         $this->RegisterVariableBoolean('Power', $this->Translate('Power'), '~Switch', 1);
@@ -85,6 +92,24 @@ class LightDevice extends IPSModuleStrict
                 }
                 $brightnessVar = $this->ReadPropertyInteger('BrightnessVariableID');
                 if ($brightnessVar === 0 || !IPS_VariableExists($brightnessVar)) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                break;
+
+            case self::BACKEND_KNX:
+                $knxID = $this->ReadPropertyInteger('KNXInstanceID');
+                if ($knxID === 0 || !IPS_InstanceExists($knxID)) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                $switchAddr = $this->ReadPropertyString('KNXSwitchAddress');
+                if ($switchAddr === '') {
+                    $this->SetStatus(201);
+                    return;
+                }
+                $dimAddr = $this->ReadPropertyString('KNXDimAddress');
+                if ($dimAddr === '') {
                     $this->SetStatus(201);
                     return;
                 }
@@ -140,6 +165,13 @@ class LightDevice extends IPSModuleStrict
                     RequestAction($powerVarID, $on);
                 }
                 break;
+
+            case self::BACKEND_KNX:
+                $switchAddr = $this->ReadPropertyString('KNXSwitchAddress');
+                if ($switchAddr !== '') {
+                    EIB_Switch($switchAddr, $on);
+                }
+                break;
         }
 
         $this->SetValue('Power', $on);
@@ -176,6 +208,13 @@ class LightDevice extends IPSModuleStrict
                 $powerVarID = $this->ReadPropertyInteger('PowerVariableID');
                 if ($powerVarID > 0 && IPS_VariableExists($powerVarID)) {
                     RequestAction($powerVarID, $level > 0);
+                }
+                break;
+
+            case self::BACKEND_KNX:
+                $dimAddr = $this->ReadPropertyString('KNXDimAddress');
+                if ($dimAddr !== '') {
+                    EIB_DimValue($dimAddr, $level);
                 }
                 break;
         }
