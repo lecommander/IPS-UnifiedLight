@@ -1,61 +1,34 @@
 ## Summary
 
-This PR introduces a major architectural refactoring: all backend implementations are extracted from module.php into separate backend classes under LightDevice/Backends/, each implementing the IBackend interface. This reduces module.php from 365 lines to 210 lines and makes each backend independently testable and maintainable. Additionally, the WLED backend (Prio 3) is implemented as the 11th and final planned backend, bringing total backend support to 11 across 9 protocols.
+This PR fixes a critical form.json compatibility issue: IPS does not support the `TextField` element type. All text input fields have been changed to `ValidationTextBox`, which is the correct IPS form element type for string properties. Additionally, two new GitHub Actions validation steps have been added to prevent this class of error in the future.
 
 ## Changes
 
-### Architecture — Backend Extraction Pattern
+### form.json — TextField → ValidationTextBox
+- Replaced all 5 occurrences of `"type": "TextField"` with `"type": "ValidationTextBox"`
+- Affected fields: KNXSwitchAddress, KNXDimAddress, DALISwitchAddress, DALIDimAddress, WLEDIPAddress
+- ValidationTextBox is the standard IPS element type for text input that maps to string properties registered via RegisterPropertyString()
 
-Each backend is now a standalone class implementing IBackend:
-- `IBackend.php` — Interface with ValidateConfiguration(), SetPower(), SetBrightness(), FadeTo()
-- `DmxBackend.php` — DMX_SetValue/DMX_FadeChannel (value 0)
-- `VariableBackend.php` — RequestAction on IPS variables, shared by Shelly (1), Zigbee2MQTT (2), Hue (7), Tasmota (9)
-- `KnxBackend.php` — EIB_Switch/EIB_DimValue (value 3)
-- `DaliBackend.php` — EIB_Switch/EIB_DimValue via KNX-DALI-Gateway (value 8)
-- `HomeMaticBackend.php` — HM_WriteValueBoolean/Float with RAMP_TIME fade (values 4, 5, 6)
-- `WledBackend.php` — HTTP POST /json/state with transition support (value 10)
+### .github/workflows/test.yml — Form validation tests
+- Added "Check form.json Element Types" step: fails CI if any unsupported type (like TextField) is found in form.json
+- Added "Check form.json Property Names Match module.php" step: verifies every `name` field in form.json has a corresponding RegisterProperty call in module.php
+- These checks prevent future form compatibility issues from reaching production
 
-module.php now acts as a thin delegator: CreateBackend() factory instantiates the appropriate backend class based on BackendType, and all public API methods (SetPower, SetBrightness, FadeTo) delegate to the backend instance.
-
-### New Backend — WLED (value 10)
-
-WledBackend controls WLED LED controllers via HTTP REST API:
-- POST to http://[ip]/json/state with JSON payloads: {"on":true,"bri":128}
-- Native fade support via "transition" field (deci-seconds: seconds * 10)
-- Default transition time configurable via WLEDTransitionTime property
-- 5-second HTTP timeout for robustness
-- Properties: WLEDIPAddress (string), WLEDTransitionTime (float)
-
-### form.json — WLED configuration
-- Added WLED option to BackendType select (value 10)
-- Added WLED Settings section with IP Address (TextField) and Default Transition Time (NumberSpinner)
-- Conditional visibility: BackendType == 10
-
-### docs/REQUIREMENTS.md — Documentation updates
-- Marked WLED as implemented in backend overview table
-- Added 6 WLED functional requirements (FR-811 through FR-816)
-- Extended ApplyChanges validation pseudocode with WLED branch
-- Added 5 WLED test cases (T-801 through T-805)
-- Updated roadmap: RM-006 WLED marked as implemented
-- Updated change history with version 2.0.0 (major refactoring)
-
-### .github/workflows/test.yml — CI updates
-- Added BACKEND_WLED constant check
-- Added case self::BACKEND_WLED check in ApplyChanges validation
-- Added new "Check Backend Files Exist" step verifying all 7 backend class files exist
+### docs/REQUIREMENTS.md — Form specification documentation
+- Expanded section 2.3 with 11 form requirements (FR-301 through FR-311) documenting all valid IPS form element types
+- Added FR-305: "Text fields must use ValidationTextBox (not TextField)"
+- Added FR-310: "form.json must be valid JSON"
+- Added FR-311: "Property names in form.json must match RegisterProperty calls in module.php"
+- Added 3 new test cases (T-018 through T-020) for form validation
+- Updated GitHub Actions test table to include Form Element Types and Property Name Match checks
+- Updated change history with version 2.0.1
 
 ## Why These Changes Matter
 
-The original module.php contained all backend logic in large switch statements, making it difficult to test individual backends, add new ones, or understand the codebase. By extracting each backend into its own class implementing a common interface, we achieve:
+The "nicht unterstützter Type: TextField" error prevented users from opening the module configuration form entirely. This was caused by using a non-existent IPS form element type. The IPS SDK documentation specifies these valid form element types: Select, SelectInstance, SelectVariable, ValidationTextBox, NumberSpinner, Label, Button, CheckBox, Switch, and a few others. TextField is not among them.
 
-1. **Single Responsibility**: Each backend class handles only its own protocol translation. DmxBackend knows nothing about KNX, HomeMaticBackend knows nothing about HTTP.
+The new CI checks ensure this cannot happen again:
+1. The element type check scans form.json for any unsupported types and fails the build if found
+2. The property name match check ensures every form field has a corresponding RegisterProperty call, catching typos or missing property registrations
 
-2. **Testability**: Backend classes can be unit-tested in isolation by mocking IPS functions. The IBackend interface enables dependency injection patterns.
-
-3. **Extensibility**: Adding a new backend now requires creating one new class file and adding one case to CreateBackend(). No modification to existing backend code is needed (Open/Closed Principle).
-
-4. **Code Reuse**: VariableBackend serves four backends (Shelly, Zigbee2MQTT, Hue, Tasmota) with zero code duplication. HomeMaticBackend serves three variants (IP, Funk, Wired) with shared RAMP_TIME fade logic.
-
-5. **Maintainability**: module.php is reduced from 365 lines to 210 lines. The factory pattern (CreateBackend) centralizes backend instantiation, and each backend file is under 80 lines.
-
-WLED completes the planned backend roadmap. With 11 backends across 9 protocols, this module now covers every major light control system used in the IPS community: professional (KNX, DALI, HomeMatic Wired), consumer (Hue, Shelly), IoT (Tasmota, Zigbee2MQTT), stage lighting (DMX), and DIY LED controllers (WLED).
+This fix is backward-compatible: ValidationTextBox reads and writes the same string properties that the TextField was attempting to use. Existing configurations are unaffected.
