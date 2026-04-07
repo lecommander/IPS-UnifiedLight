@@ -5,15 +5,16 @@
       "name": "BackendType",
       "caption": "Backend Type",
       "options": [
-        { "caption": "DMX (IPS built-in)",               "value": 0 },
-        { "caption": "Shelly Dimmer (IPS-Shelly)",       "value": 1 },
-        { "caption": "Zigbee2MQTT (IPS-Zigbee2MQTT)",    "value": 2 },
-        { "caption": "KNX (IPS built-in)",               "value": 3 },
-        { "caption": "HomeMatic IP (HmIP)",              "value": 4 },
-        { "caption": "HomeMatic Funk (HM-RF)",           "value": 5 },
-        { "caption": "HomeMatic Wired (HM-Wired)",       "value": 6 },
-        { "caption": "Philips Hue (IPS-PhilipsHue-V2)",  "value": 7 },
-        { "caption": "DALI via KNX (KNX-DALI-Gateway)",  "value": 8 }
+        { "caption": "DMX (IPS built-in)",                "value": 0 },
+        { "caption": "Shelly Dimmer (IPS-Shelly)",        "value": 1 },
+        { "caption": "Zigbee2MQTT (IPS-Zigbee2MQTT)",     "value": 2 },
+        { "caption": "KNX (IPS built-in)",                "value": 3 },
+        { "caption": "HomeMatic IP (HmIP)",               "value": 4 },
+        { "caption": "HomeMatic Funk (HM-RF)",            "value": 5 },
+        { "caption": "HomeMatic Wired (HM-Wired)",        "value": 6 },
+        { "caption": "Philips Hue (IPS-PhilipsHue-V2)",   "value": 7 },
+        { "caption": "DALI via KNX (KNX-DALI-Gateway)",   "value": 8 },
+        { "caption": "Tasmota/ESP (IPS MQTT)",            "value": 9 }
       ]
     },
     {
@@ -47,25 +48,25 @@
     },
     {
       "type": "Label",
-      "caption": "── Shelly / Zigbee2MQTT / Hue Settings (variable-based backends) ──",
-      "visible": "BackendType == 1 || BackendType == 2 || BackendType == 7"
+      "caption": "── Shelly / Zigbee2MQTT / Hue / Tasmota Settings (variable-based backends) ──",
+      "visible": "BackendType == 1 || BackendType == 2 || BackendType == 7 || BackendType == 9"
     },
     {
       "type": "Label",
       "caption": "Select the Power and Brightness variables from the device instance in the object tree.",
-      "visible": "BackendType == 1 || BackendType == 2 || BackendType == 7"
+      "visible": "BackendType == 1 || BackendType == 2 || BackendType == 7 || BackendType == 9"
     },
     {
       "type": "SelectVariable",
       "name": "PowerVariableID",
       "caption": "Power Variable (boolean, on/off)",
-      "visible": "BackendType == 1 || BackendType == 2 || BackendType == 7"
+      "visible": "BackendType == 1 || BackendType == 2 || BackendType == 7 || BackendType == 9"
     },
     {
       "type": "SelectVariable",
       "name": "BrightnessVariableID",
       "caption": "Brightness Variable (integer, 0–100)",
-      "visible": "BackendType == 1 || BackendType == 2 || BackendType == 7"
+      "visible": "BackendType == 1 || BackendType == 2 || BackendType == 7 || BackendType == 9"
     },
     {
       "type": "Label",

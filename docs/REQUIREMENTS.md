@@ -33,7 +33,7 @@
 | HomeMatic Wired | 6 | Prio 1 | HomeMatic Wired (HMW-LC-Dim, HMW-LC-Sw) | Offizielles HomeMatic-Modul | ✅ Implementiert |
 | Philips Hue | 7 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ✅ Implementiert |
 | DALI (über KNX) | 8 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ✅ Implementiert |
-| Tasmota/ESP | 9 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API | ❌ Geplant |
+| Tasmota/ESP | 9 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | IPS MQTT Modul | ✅ Implementiert |
 | WLED | 10 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT | ❌ Geplant |
 
 ---
@@ -166,15 +166,16 @@
 | FR-616 | EIB_DimValue() wird für DALI Dimmen verwendet | ✅ Implementiert |
 | FR-617 | DALI unterstützt kein natives Fade — instant setzen | ✅ Implementiert |
 
-#### Tasmota/ESP Backend (Prio 3 — geplant)
+#### Tasmota/ESP Backend (Prio 3)
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-711 | MQTT Broker Instance muss auswählbar sein | ❌ Geplant |
-| FR-712 | MQTT Topic (cmt/tasmota/POWER, cmt/tasmota/Dimmer) konfigurierbar | ❌ Geplant |
-| FR-713 | Alternativ: HTTP API URL + Password konfigurierbar | ❌ Geplant |
-| FR-714 | MQTT_Publish() oder HTTP_Request() für Steuerung | ❌ Geplant |
-| FR-715 | Status-Rückmeldung über MQTT State-Topic | ❌ Geplant |
+| FR-711 | Tasmota nutzt Power/Brightness Variables vom IPS MQTT Modul | ✅ Implementiert |
+| FR-712 | MQTT Topic cmnd/tasmota/POWER für Schalten | ✅ Implementiert |
+| FR-713 | MQTT Topic cmnd/tasmota/Dimmer für Dimmen (0–100) | ✅ Implementiert |
+| FR-714 | RequestAction() auf MQTT-Variablen (gleicher Code-Pfad wie Shelly/Hue) | ✅ Implementiert |
+| FR-715 | Tasmota White, Tasmota Dimmer, Sonoff SV werden unterstützt | ✅ Implementiert |
+| FR-716 | Fallback: HTTP API (/cm?cmnd=Power%20ON) nicht vorgesehen | ❌ Nicht vorgesehen |
 
 #### WLED Backend (Prio 3 — geplant)
 
@@ -311,7 +312,7 @@ IF BackendType == DMX:
     SET Status = 201 (Not configured)
     RETURN
 
-ELSE IF BackendType == Shelly OR BackendType == Zigbee2MQTT OR BackendType == Hue:
+ELSE IF BackendType == Shelly OR BackendType == Zigbee2MQTT OR BackendType == Hue OR BackendType == Tasmota:
   IF PowerVariableID == 0 OR NOT IPS_VariableExists(PowerVariableID):
     SET Status = 201 (Not configured)
     RETURN
@@ -464,6 +465,16 @@ SET Status = 102 (Active)
 | T-604 | DALI ohne Switch Address speichern | Status 201 (Not configured) | ✅ |
 | T-605 | DALI Gateway Type "BEG Luxomat" auswählen | DALIGatewayType = 1 | ✅ |
 
+#### Tasmota/ESP
+
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-701 | Tasmota Device, Power ON | RequestAction auf POWER-Variable = true | ✅ |
+| T-702 | Tasmota Brightness 50% | RequestAction auf Dimmer-Variable = 50 | ✅ |
+| T-703 | Tasmota Brightness 0% | POWER-Variable wird auf false gesetzt | ✅ |
+| T-704 | Tasmota ohne Power Variable speichern | Status 201 (Not configured) | ✅ |
+| T-705 | Tasmota über MQTT (cmnd/tasmota/POWER) | MQTT Publish an Tasmota-Device | ✅ |
+
 ---
 
 ## 8. Roadmap (Geplante Erweiterungen)
@@ -476,7 +487,7 @@ SET Status = 102 (Active)
 | RM-002b | HomeMatic Wired Backend | Prio 1 | ✅ Implementiert |
 | RM-003 | Philips Hue Backend | Prio 2 | ✅ Implementiert |
 | RM-004 | DALI über KNX Gateway | Prio 2 | ✅ Implementiert |
-| RM-005 | Tasmota/ESP Backend (MQTT/HTTP) | Prio 3 | ❌ Geplant |
+| RM-005 | Tasmota/ESP Backend (MQTT) | Prio 3 | ✅ Implementiert |
 | RM-006 | WLED Backend (HTTP/MQTT) | Prio 3 | ❌ Geplant |
 | RM-007 | RGBW / Color Support (ColorTemp, RGB) | Hoch | ❌ Geplant |
 | RM-008 | LightGroup: Mehrere Instanzen als Szene steuern | Mittel | ❌ Geplant |
@@ -510,6 +521,7 @@ SET Status = 102 (Active)
 | 1.4.0 | 2026-04-06 | HomeMatic IP + Funk + Wired Backend implementiert (HM_WriteValueBoolean, HM_WriteValueFloat, RAMP_TIME) | Qwen Code |
 | 1.5.0 | 2026-04-06 | Philips Hue Backend implementiert (RequestAction auf IPS-PhilipsHue-V2 Variablen) | Qwen Code |
 | 1.6.0 | 2026-04-06 | DALI über KNX Backend implementiert (EIB_Switch/EIB_DimValue via KNX-DALI-Gateway) + fehlende Test Cases ergänzt | Qwen Code |
+| 1.7.0 | 2026-04-06 | Tasmota/ESP Backend implementiert (RequestAction auf IPS MQTT Variablen — gleicher Code-Pfad wie Shelly/Hue) | Qwen Code |
 
 ---
 

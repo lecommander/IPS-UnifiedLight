@@ -18,6 +18,8 @@
  *     - Wired (6):      HMW-LC-Dim1L-DR, HMW-IO-12-Sw7-DR
  *   - Philips Hue:  RequestAction() on variables created by Schnittcher/IPS-PhilipsHue-V2 (7)
  *   - DALI via KNX: EIB_Switch() / EIB_DimValue() via KNX-DALI-Gateway (BEG Luxomat, Lunatone) (8)
+ *   - Tasmota/ESP:  RequestAction() on variables created by IPS MQTT module (cmnd/stat topics) (9)
+ *   - WLED:         RequestAction() on variables or HTTP POST /json/state (10)
  *
  * Public API (callable from scripts):
  *   ULIGHT_SetPower($id, bool $on)
@@ -37,6 +39,7 @@ class LightDevice extends IPSModuleStrict
     const BACKEND_HMWIRED      = 6;
     const BACKEND_HUE          = 7;
     const BACKEND_DALI         = 8;
+    const BACKEND_TASMOTA      = 9;
 
     public function Create(): void
     {
@@ -107,6 +110,7 @@ class LightDevice extends IPSModuleStrict
             case self::BACKEND_SHELLY:
             case self::BACKEND_ZIGBEE2MQTT:
             case self::BACKEND_HUE:
+            case self::BACKEND_TASMOTA:
                 $powerVar = $this->ReadPropertyInteger('PowerVariableID');
                 if ($powerVar === 0 || !IPS_VariableExists($powerVar)) {
                     $this->SetStatus(201);
@@ -216,6 +220,7 @@ class LightDevice extends IPSModuleStrict
             case self::BACKEND_SHELLY:
             case self::BACKEND_ZIGBEE2MQTT:
             case self::BACKEND_HUE:
+            case self::BACKEND_TASMOTA:
                 $powerVarID = $this->ReadPropertyInteger('PowerVariableID');
                 if ($powerVarID > 0 && IPS_VariableExists($powerVarID)) {
                     RequestAction($powerVarID, $on);
@@ -273,6 +278,7 @@ class LightDevice extends IPSModuleStrict
             case self::BACKEND_SHELLY:
             case self::BACKEND_ZIGBEE2MQTT:
             case self::BACKEND_HUE:
+            case self::BACKEND_TASMOTA:
                 $brightnessVarID = $this->ReadPropertyInteger('BrightnessVariableID');
                 if ($brightnessVarID > 0 && IPS_VariableExists($brightnessVarID)) {
                     RequestAction($brightnessVarID, $level);
