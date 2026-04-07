@@ -202,7 +202,10 @@
 | FR-308 | Zahlen-Eingabe muss NumberSpinner sein | `{"type": "NumberSpinner", "minimum", "maximum"}` | ✅ Implementiert |
 | FR-309 | Trennlinien müssen Label sein | `{"type": "Label", "caption": "── ... ──"}` | ✅ Implementiert |
 | FR-310 | form.json muss gültiges JSON sein | Python `json.tool` Validation in CI | ✅ Implementiert |
-| FR-311 | Alle Property-Namen in form.json müssen mit RegisterProperty in module.php übereinstimmen | `name` in form.json == erster Parameter von RegisterProperty | ✅ Implementiert |
+| FR-311 | Alle Elementtypen müssen IPS-konform sein | Generischer Validator prüft gegen Whitelist aller 16 IPS-Typen | ✅ Implementiert |
+| FR-312 | Alle Property-Namen in form.json müssen eindeutig sein | Duplicate-Name-Check in CI | ✅ Implementiert |
+| FR-313 | Alle Property-Namen in form.json müssen mit RegisterProperty in module.php übereinstimmen | `name` in form.json == erster Parameter von RegisterProperty | ✅ Implementiert |
+| FR-314 | Status-Einträge müssen `code` und `caption` haben | CI-Validierung | ✅ Implementiert |
 
 ---
 
@@ -554,6 +557,7 @@ SET Status = 102 (Active)
 | 1.7.0 | 2026-04-06 | Tasmota/ESP Backend implementiert (RequestAction auf IPS MQTT Variablen — gleicher Code-Pfad wie Shelly/Hue) | Qwen Code |
 | 2.0.0 | 2026-04-06 | **Major Refactoring**: Alle Backends in separate Klassen extrahiert (Backends/*.php), IBackend-Interface eingeführt, module.php auf Backend-Delegation umgestellt. WLED Backend implementiert (HTTP REST API). | Qwen Code |
 | 2.0.1 | 2026-04-06 | **Bugfix**: TextField → ValidationTextBox in form.json (IPS unterstützt kein TextField). Form-Validierungstests zu GitHub Actions hinzugefügt. Property-Name-Match-Check implementiert. | Qwen Code |
+| 2.0.2 | 2026-04-06 | **Bugfix**: Duplicate KNXInstanceID in form.json entfernt (KNX und DALI teilen sich Property). CI: Generischer form.json Type-Validator gegen IPS-Whitelist (16 Typen), Duplicate-Name-Check, Status-Validation. | Qwen Code |
 
 ---
 
