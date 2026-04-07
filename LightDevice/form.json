@@ -14,7 +14,8 @@
         { "caption": "HomeMatic Wired (HM-Wired)",        "value": 6 },
         { "caption": "Philips Hue (IPS-PhilipsHue-V2)",   "value": 7 },
         { "caption": "DALI via KNX (KNX-DALI-Gateway)",   "value": 8 },
-        { "caption": "Tasmota/ESP (IPS MQTT)",            "value": 9 }
+        { "caption": "Tasmota/ESP (IPS MQTT)",            "value": 9 },
+        { "caption": "WLED (HTTP REST API)",              "value": 10 }
       ]
     },
     {
@@ -151,6 +152,27 @@
       "digits": 1,
       "steps": 0.5,
       "visible": "BackendType >= 4 && BackendType <= 6"
+    },
+    {
+      "type": "Label",
+      "caption": "── WLED Settings (HTTP REST API) ─────────────────────────────",
+      "visible": "BackendType == 10"
+    },
+    {
+      "type": "TextField",
+      "name": "WLEDIPAddress",
+      "caption": "WLED IP Address or Hostname",
+      "visible": "BackendType == 10"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "WLEDTransitionTime",
+      "caption": "Default Transition Time (seconds, 0 = instant)",
+      "minimum": 0,
+      "maximum": 60,
+      "digits": 1,
+      "steps": 0.5,
+      "visible": "BackendType == 10"
     }
   ],
   "actions": [
