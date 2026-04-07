@@ -34,7 +34,7 @@
 | Philips Hue | 7 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ✅ Implementiert |
 | DALI (über KNX) | 8 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ✅ Implementiert |
 | Tasmota/ESP | 9 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | IPS MQTT Modul | ✅ Implementiert |
-| WLED | 10 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT | ❌ Geplant |
+| WLED | 10 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API (/json/state) | ✅ Implementiert |
 
 ---
 
@@ -177,14 +177,16 @@
 | FR-715 | Tasmota White, Tasmota Dimmer, Sonoff SV werden unterstützt | ✅ Implementiert |
 | FR-716 | Fallback: HTTP API (/cm?cmnd=Power%20ON) nicht vorgesehen | ❌ Nicht vorgesehen |
 
-#### WLED Backend (Prio 3 — geplant)
+#### WLED Backend (Prio 3)
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-811 | HTTP API URL oder MQTT Topic konfigurierbar | ❌ Geplant |
-| FR-812 | WLED JSON API: POST /json/state mit {"on":true,"bri":128} | ❌ Geplant |
-| FR-813 | Fade-Parameter über WLED Transition-Feld | ❌ Geplant |
-| FR-814 | Alternativ: MQTT mit wled/[device]/api | ❌ Geplant |
+| FR-811 | WLED IP Address muss konfigurierbar sein | ✅ Implementiert |
+| FR-812 | HTTP POST /json/state mit {"on":true,"bri":128} | ✅ Implementiert |
+| FR-813 | Transition Time in Deci-Sekunden (transition = seconds * 10) | ✅ Implementiert |
+| FR-814 | WLED Default Transition Time als Property konfigurierbar | ✅ Implementiert |
+| FR-815 | WLED White, WLED RGB, WLED FX werden unterstützt | ✅ Implementiert |
+| FR-816 | HTTP Timeout von 5 Sekunden für Robustheit | ✅ Implementiert |
 
 ### 2.3 Formular-Anforderungen
 
@@ -266,6 +268,8 @@
 | HMInstanceID | integer | 0 | HomeMatic CCU/Zentrale Instance ID |
 | HMDeviceID | integer | 0 | HomeMatic Geräte-Instanz (Dimmer/Schalter) |
 | HMFadeTime | float | 0.0 | RAMP_TIME / Fade-Time in Sekunden (0 = instant) |
+| WLEDIPAddress | string | "" | WLED IP Address or Hostname |
+| WLEDTransitionTime | float | 0.0 | Default Transition Time in Sekunden (0 = instant) |
 
 ---
 
@@ -347,6 +351,11 @@ ELSE IF BackendType == HmIP OR BackendType == HM-RF OR BackendType == HM-Wired:
     SET Status = 201 (Not configured)
     RETURN
   IF HMDeviceID == 0 OR NOT IPS_InstanceExists(HMDeviceID):
+    SET Status = 201 (Not configured)
+    RETURN
+
+ELSE IF BackendType == WLED:
+  IF WLEDIPAddress == "":
     SET Status = 201 (Not configured)
     RETURN
 
@@ -475,6 +484,16 @@ SET Status = 102 (Active)
 | T-704 | Tasmota ohne Power Variable speichern | Status 201 (Not configured) | ✅ |
 | T-705 | Tasmota über MQTT (cmnd/tasmota/POWER) | MQTT Publish an Tasmota-Device | ✅ |
 
+#### WLED
+
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-801 | WLED IP "192.168.1.100", Power ON | POST /json/state {"on":true} | ✅ |
+| T-802 | WLED Brightness 50% | POST /json/state {"on":true,"bri":50} | ✅ |
+| T-803 | WLED Fade 3s zu 80% | POST /json/state {"on":true,"bri":80,"transition":30} | ✅ |
+| T-804 | WLED ohne IP Address speichern | Status 201 (Not configured) | ✅ |
+| T-805 | WLED Brightness 0% | POST /json/state {"on":false} | ✅ |
+
 ---
 
 ## 8. Roadmap (Geplante Erweiterungen)
@@ -488,7 +507,7 @@ SET Status = 102 (Active)
 | RM-003 | Philips Hue Backend | Prio 2 | ✅ Implementiert |
 | RM-004 | DALI über KNX Gateway | Prio 2 | ✅ Implementiert |
 | RM-005 | Tasmota/ESP Backend (MQTT) | Prio 3 | ✅ Implementiert |
-| RM-006 | WLED Backend (HTTP/MQTT) | Prio 3 | ❌ Geplant |
+| RM-006 | WLED Backend (HTTP REST API) | Prio 3 | ✅ Implementiert |
 | RM-007 | RGBW / Color Support (ColorTemp, RGB) | Hoch | ❌ Geplant |
 | RM-008 | LightGroup: Mehrere Instanzen als Szene steuern | Mittel | ❌ Geplant |
 | RM-009 | Transition Time für Shelly/Zigbee2MQTT/HomeMatic | Mittel | ❌ Geplant |
@@ -522,6 +541,7 @@ SET Status = 102 (Active)
 | 1.5.0 | 2026-04-06 | Philips Hue Backend implementiert (RequestAction auf IPS-PhilipsHue-V2 Variablen) | Qwen Code |
 | 1.6.0 | 2026-04-06 | DALI über KNX Backend implementiert (EIB_Switch/EIB_DimValue via KNX-DALI-Gateway) + fehlende Test Cases ergänzt | Qwen Code |
 | 1.7.0 | 2026-04-06 | Tasmota/ESP Backend implementiert (RequestAction auf IPS MQTT Variablen — gleicher Code-Pfad wie Shelly/Hue) | Qwen Code |
+| 2.0.0 | 2026-04-06 | **Major Refactoring**: Alle Backends in separate Klassen extrahiert (Backends/*.php), IBackend-Interface eingeführt, module.php auf Backend-Delegation umgestellt. WLED Backend implementiert (HTTP REST API). | Qwen Code |
 
 ---
 

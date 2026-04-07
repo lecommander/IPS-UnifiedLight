@@ -56,7 +56,21 @@ jobs:
           grep -q "const BACKEND_DALI" LightDevice/module.php
           echo "Checking BACKEND_TASMOTA constant..."
           grep -q "const BACKEND_TASMOTA" LightDevice/module.php
+          echo "Checking BACKEND_WLED constant..."
+          grep -q "const BACKEND_WLED" LightDevice/module.php
           echo "All backend constants found."
+
+      - name: Check Backend Files Exist
+        run: |
+          echo "Checking Backends directory structure..."
+          test -f LightDevice/Backends/IBackend.php
+          test -f LightDevice/Backends/DmxBackend.php
+          test -f LightDevice/Backends/VariableBackend.php
+          test -f LightDevice/Backends/KnxBackend.php
+          test -f LightDevice/Backends/DaliBackend.php
+          test -f LightDevice/Backends/HomeMaticBackend.php
+          test -f LightDevice/Backends/WledBackend.php
+          echo "All backend files exist."
 
       - name: Check ApplyChanges Validates All Backends
         run: |
@@ -80,6 +94,8 @@ jobs:
           grep -q "case self::BACKEND_DALI:" LightDevice/module.php
           echo "Checking ApplyChanges validates Tasmota..."
           grep -q "case self::BACKEND_TASMOTA:" LightDevice/module.php
+          echo "Checking ApplyChanges validates WLED..."
+          grep -q "case self::BACKEND_WLED:" LightDevice/module.php
           echo "All backends validated in ApplyChanges."
 
       - name: Check RequestAction Handles All Idents
