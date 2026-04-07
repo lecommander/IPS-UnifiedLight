@@ -191,12 +191,12 @@
   "status": [
     {
       "code": 102,
-      "icon": "Active",
+      "icon": "active",
       "caption": "Device configured and active"
     },
     {
       "code": 201,
-      "icon": "Warning",
+      "icon": "error",
       "caption": "Not configured — check Backend Type and Instance/Variable settings"
     }
   ]
