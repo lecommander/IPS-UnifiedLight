@@ -28,16 +28,72 @@ jobs:
       - name: JSON Validation (module.json)
         run: python -m json.tool LightDevice/module.json > /dev/null
 
-      - name: Check form.json Element Types
+      - name: Validate form.json Element Types Against IPS Specification
         run: |
-          echo "Checking for unsupported form element types..."
-          if grep -q '"type": "TextField"' LightDevice/form.json; then
-            echo "ERROR: TextField is not a valid IPS form element type. Use ValidationTextBox instead."
-            exit 1
-          fi
-          echo "All form element types are valid."
+          echo "Validating all form.json element types against IPS SDK specification..."
+          python3 -c "
+          import json, sys
 
-      - name: Check form.json Property Names Match module.php
+          # Official IPS supported form element types per SDK documentation
+          # https://www.symcon.de/de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/configuration-forms/
+          VALID_TYPES = {
+              'Select',           # Dropdown selection
+              'SelectInstance',   # Instance picker from object tree
+              'SelectVariable',   # Variable picker from object tree
+              'ValidationTextBox', # Text input field (NOT TextField)
+              'NumberSpinner',    # Number input with min/max constraints
+              'Label',            # Static text label
+              'Button',           # Action button with onClick handler
+              'CheckBox',         # Checkbox
+              'Switch',           # Toggle switch
+              'Expandable',       # Collapsible section
+              'Panel',            # Grouping panel
+              'ColorPicker',      # Color picker
+              'Location',         # Location picker
+              'Timer',            # Timer configuration
+              'Link',             # Link field
+              'TestCenter',       # Test center action
+          }
+
+          with open('LightDevice/form.json') as f:
+              form = json.load(f)
+
+          errors = []
+
+          # Check all elements
+          for i, el in enumerate(form.get('elements', [])):
+              etype = el.get('type')
+              if etype is None:
+                  errors.append(f'Element {i}: missing \"type\" field')
+              elif etype not in VALID_TYPES:
+                  errors.append(f'Element {i}: unsupported type \"{etype}\" (valid: {sorted(VALID_TYPES)})')
+
+          # Check all actions
+          for i, el in enumerate(form.get('actions', [])):
+              etype = el.get('type')
+              if etype is None:
+                  errors.append(f'Action {i}: missing \"type\" field')
+              elif etype not in VALID_TYPES:
+                  errors.append(f'Action {i}: unsupported type \"{etype}\" (valid: {sorted(VALID_TYPES)})')
+
+          # Check all status entries
+          for i, el in enumerate(form.get('status', [])):
+              if 'code' not in el:
+                  errors.append(f'Status {i}: missing \"code\" field')
+              if 'caption' not in el:
+                  errors.append(f'Status {i}: missing \"caption\" field')
+
+          if errors:
+              print('ERROR: form.json validation failed:')
+              for e in errors:
+                  print(f'  - {e}')
+              sys.exit(1)
+
+          all_types = set(el.get('type') for el in form.get('elements', []) if 'type' in el)
+          print('All ' + str(len(all_types)) + ' element types are valid IPS form types: ' + str(sorted(all_types)))
+          "
+
+      - name: Check form.json for Duplicate Property Names
         run: |
           echo "Checking form.json property names match RegisterProperty calls..."
           python3 -c "
@@ -63,6 +119,28 @@ jobs:
               print('ERROR: form.json names not found in RegisterProperty calls: ' + str(missing))
               sys.exit(1)
           print('All ' + str(len(form_names)) + ' form property names match RegisterProperty calls.')
+          "
+
+      - name: Check form.json for Duplicate Property Names
+        run: |
+          echo "Checking for duplicate property names in form.json..."
+          python3 -c "
+          import json, sys
+          from collections import Counter
+
+          with open('LightDevice/form.json') as f:
+              form = json.load(f)
+
+          names = [el['name'] for el in form.get('elements', []) if 'name' in el]
+          counts = Counter(names)
+          duplicates = {n: c for n, c in counts.items() if c > 1}
+
+          if duplicates:
+              print('ERROR: Duplicate property names found in form.json:')
+              for name, count in duplicates.items():
+                  print(f'  {name}: appears {count} times')
+              sys.exit(1)
+          print('No duplicate property names found (' + str(len(set(names))) + ' unique names).')
           "
 
   structure:

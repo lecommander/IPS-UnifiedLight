@@ -71,37 +71,26 @@
     },
     {
       "type": "Label",
-      "caption": "── KNX Settings (only for Backend Type = KNX) ─────────────────",
-      "visible": "BackendType == 3"
+      "caption": "── KNX / DALI via KNX Settings ─────────────────────────────────",
+      "visible": "BackendType == 3 || BackendType == 8"
     },
     {
       "type": "SelectInstance",
       "name": "KNXInstanceID",
       "caption": "KNX Instance",
-      "visible": "BackendType == 3"
+      "visible": "BackendType == 3 || BackendType == 8"
     },
     {
       "type": "ValidationTextBox",
       "name": "KNXSwitchAddress",
-      "caption": "Switch Group Address (e.g. 1/2/3)",
+      "caption": "KNX Switch Group Address (e.g. 1/2/3)",
       "visible": "BackendType == 3"
     },
     {
       "type": "ValidationTextBox",
       "name": "KNXDimAddress",
-      "caption": "Dim Group Address (e.g. 1/2/4)",
+      "caption": "KNX Dim Group Address (e.g. 1/2/4)",
       "visible": "BackendType == 3"
-    },
-    {
-      "type": "Label",
-      "caption": "── DALI via KNX Settings (KNX-DALI-Gateway) ──────────────────",
-      "visible": "BackendType == 8"
-    },
-    {
-      "type": "SelectInstance",
-      "name": "KNXInstanceID",
-      "caption": "KNX Instance (shared with KNX backend)",
-      "visible": "BackendType == 8"
     },
     {
       "type": "Select",
