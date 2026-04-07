@@ -31,7 +31,7 @@
 | HomeMatic IP | 4 | Prio 1 | 868 MHz Funk, HmIP-PDT Dimmer | Offizielles HomeMatic-Modul | ✅ Implementiert |
 | HomeMatic Funk | 5 | Prio 1 | 868 MHz Funk (HM-LC-Dim, HM-LC-Sw) | Offizielles HomeMatic-Modul | ✅ Implementiert |
 | HomeMatic Wired | 6 | Prio 1 | HomeMatic Wired (HMW-LC-Dim, HMW-LC-Sw) | Offizielles HomeMatic-Modul | ✅ Implementiert |
-| Philips Hue | 7 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ❌ Geplant |
+| Philips Hue | 7 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ✅ Implementiert |
 | DALI (über KNX) | 8 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ❌ Geplant |
 | Tasmota/ESP | 9 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API | ❌ Geplant |
 | WLED | 10 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT | ❌ Geplant |
@@ -143,15 +143,16 @@
 | FR-433 | HM_WriteValueFloat/Boolean API identisch zu Funk/IP | ✅ Implementiert |
 | FR-434 | HomeMatic Wired nutzt RS485-Bus statt Funk | ✅ Implementiert |
 
-#### Philips Hue Backend (Prio 2 — geplant)
+#### Philips Hue Backend (Prio 2)
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-511 | Hue Bridge Instance muss auswählbar sein | ❌ Geplant |
-| FR-512 | Light ID (1–63) muss konfigurierbar sein | ❌ Geplant |
-| FR-513 | Hue_SetLight() wird für Schalten/Dimmen verwendet | ❌ Geplant |
-| FR-514 | on-State (bool) und bri (0–254) werden verwendet | ❌ Geplant |
-| FR-515 | Transitiontime-Parameter für Fade (optional) | ❌ Geplant |
+| FR-511 | Hue Bridge Instance muss auswählbar sein (über Power/Brightness Variable) | ✅ Implementiert |
+| FR-512 | Light-ID wird automatisch über IPS-PhilipsHue-V2 Modul ermittelt | ✅ Implementiert |
+| FR-513 | RequestAction() auf On-Variable (boolean) für Schalten | ✅ Implementiert |
+| FR-514 | RequestAction() auf Brightness-Variable (0–254, von IPS auf 0–100 gemappt) | ✅ Implementiert |
+| FR-515 | transitiontime-Parameter über Hue-Modul unterstützt (optional) | ❌ Nicht vorgesehen |
+| FR-516 | Hue White Ambiance, Hue White, Hue White & Color Ambiance werden unterstützt | ✅ Implementiert |
 
 #### DALI über KNX Backend (Prio 2 — geplant)
 
@@ -271,6 +272,7 @@
 | IPS-Zigbee2MQTT | Zigbee2MQTT | Ja | Schnittcher/IPS-Zigbee2MQTT |
 | IPS KNX | KNX | Nein (built-in) | IPS Standard |
 | IPS HomeMatic | HmIP, Funk, Wired | Nein (built-in) | IPS Standard |
+| IPS-PhilipsHue-V2 | Philips Hue | Ja | Schnittcher/IPS-PhilipsHue-V2 |
 
 ### 5.2 IPS Funktionen
 
@@ -302,7 +304,7 @@ IF BackendType == DMX:
     SET Status = 201 (Not configured)
     RETURN
 
-ELSE IF BackendType == Shelly OR BackendType == Zigbee2MQTT:
+ELSE IF BackendType == Shelly OR BackendType == Zigbee2MQTT OR BackendType == Hue:
   IF PowerVariableID == 0 OR NOT IPS_VariableExists(PowerVariableID):
     SET Status = 201 (Not configured)
     RETURN
@@ -417,6 +419,16 @@ SET Status = 102 (Active)
 | T-406 | HM-Funk Dimmer "HM-LC-Dim1T-FM", Brightness 100% | LEVEL=1.0 | ✅ |
 | T-407 | HM-Wired Schaltaktor "HMW-IO-12-Sw7-DR", Power OFF | STATE=false | ✅ |
 
+#### Philips Hue
+
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-501 | Hue White Ambiance Light, Power ON | RequestAction auf On-Variable = true | ✅ |
+| T-502 | Hue Brightness 50% | RequestAction auf Brightness-Variable = 50 | ✅ |
+| T-503 | Hue Brightness 0% | On-Variable wird auf false gesetzt | ✅ |
+| T-504 | Hue ohne Power Variable speichern | Status 201 (Not configured) | ✅ |
+| T-505 | Hue ohne Brightness Variable speichern | Status 201 (Not configured) | ✅ |
+
 ---
 
 ## 8. Roadmap (Geplante Erweiterungen)
@@ -427,7 +439,7 @@ SET Status = 102 (Active)
 | RM-002 | HomeMatic IP Backend | Prio 1 | ✅ Implementiert |
 | RM-002a | HomeMatic Funk Backend | Prio 1 | ✅ Implementiert |
 | RM-002b | HomeMatic Wired Backend | Prio 1 | ✅ Implementiert |
-| RM-003 | Philips Hue Backend | Prio 2 | ❌ Geplant |
+| RM-003 | Philips Hue Backend | Prio 2 | ✅ Implementiert |
 | RM-004 | DALI über KNX Gateway | Prio 2 | ❌ Geplant |
 | RM-005 | Tasmota/ESP Backend (MQTT/HTTP) | Prio 3 | ❌ Geplant |
 | RM-006 | WLED Backend (HTTP/MQTT) | Prio 3 | ❌ Geplant |
@@ -461,6 +473,7 @@ SET Status = 102 (Active)
 | 1.2.0 | 2026-04-06 | KNX Backend implementiert (EIB_Switch, EIB_DimValue) | Qwen Code |
 | 1.3.0 | 2026-04-06 | HomeMatic Funk + Wired hinzugefügt, IPSLight Feature-Parity Analyse, WebFront-Dokumentation | Qwen Code |
 | 1.4.0 | 2026-04-06 | HomeMatic IP + Funk + Wired Backend implementiert (HM_WriteValueBoolean, HM_WriteValueFloat, RAMP_TIME) | Qwen Code |
+| 1.5.0 | 2026-04-06 | Philips Hue Backend implementiert (RequestAction auf IPS-PhilipsHue-V2 Variablen) | Qwen Code |
 
 ---
 
