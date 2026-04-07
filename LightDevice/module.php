@@ -4,8 +4,8 @@
  * LightDevice — Unified Light Controller
  *
  * Provides a single interface (Power + Brightness) for DMX, Shelly Dimmer,
- * Zigbee2MQTT, KNX, and HomeMatic light devices. Translates generic commands
- * to each backend's native IPS API.
+ * Zigbee2MQTT, KNX, HomeMatic, and Philips Hue light devices. Translates generic
+ * commands to each backend's native IPS API.
  *
  * Backends:
  *   - DMX:          DMX_SetValue() / DMX_FadeChannel() via IPS built-in DMX module
@@ -16,6 +16,7 @@
  *     - HmIP (4):       HmIP-PDT, HmIP-FDT, HmIP-BSL
  *     - Funk (5):       HM-LC-Dim1TPBU-FM, HM-LC-Dim1T-FM, HM-LC-Sw1-Pl-2
  *     - Wired (6):      HMW-LC-Dim1L-DR, HMW-IO-12-Sw7-DR
+ *   - Philips Hue:  RequestAction() on variables created by Schnittcher/IPS-PhilipsHue-V2 (7)
  *
  * Public API (callable from scripts):
  *   ULIGHT_SetPower($id, bool $on)
@@ -33,6 +34,7 @@ class LightDevice extends IPSModuleStrict
     const BACKEND_HMIP         = 4;
     const BACKEND_HMRF         = 5;
     const BACKEND_HMWIRED      = 6;
+    const BACKEND_HUE          = 7;
 
     public function Create(): void
     {
@@ -97,6 +99,7 @@ class LightDevice extends IPSModuleStrict
 
             case self::BACKEND_SHELLY:
             case self::BACKEND_ZIGBEE2MQTT:
+            case self::BACKEND_HUE:
                 $powerVar = $this->ReadPropertyInteger('PowerVariableID');
                 if ($powerVar === 0 || !IPS_VariableExists($powerVar)) {
                     $this->SetStatus(201);
@@ -187,6 +190,7 @@ class LightDevice extends IPSModuleStrict
 
             case self::BACKEND_SHELLY:
             case self::BACKEND_ZIGBEE2MQTT:
+            case self::BACKEND_HUE:
                 $powerVarID = $this->ReadPropertyInteger('PowerVariableID');
                 if ($powerVarID > 0 && IPS_VariableExists($powerVarID)) {
                     RequestAction($powerVarID, $on);
@@ -236,6 +240,7 @@ class LightDevice extends IPSModuleStrict
 
             case self::BACKEND_SHELLY:
             case self::BACKEND_ZIGBEE2MQTT:
+            case self::BACKEND_HUE:
                 $brightnessVarID = $this->ReadPropertyInteger('BrightnessVariableID');
                 if ($brightnessVarID > 0 && IPS_VariableExists($brightnessVarID)) {
                     RequestAction($brightnessVarID, $level);

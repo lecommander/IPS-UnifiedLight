@@ -50,6 +50,8 @@ jobs:
           grep -q "const BACKEND_HMRF" LightDevice/module.php
           echo "Checking BACKEND_HMWIRED constant..."
           grep -q "const BACKEND_HMWIRED" LightDevice/module.php
+          echo "Checking BACKEND_HUE constant..."
+          grep -q "const BACKEND_HUE" LightDevice/module.php
           echo "All backend constants found."
 
       - name: Check ApplyChanges Validates All Backends
@@ -68,6 +70,8 @@ jobs:
           grep -q "case self::BACKEND_HMRF:" LightDevice/module.php
           echo "Checking ApplyChanges validates HomeMatic Wired..."
           grep -q "case self::BACKEND_HMWIRED:" LightDevice/module.php
+          echo "Checking ApplyChanges validates Hue..."
+          grep -q "case self::BACKEND_HUE:" LightDevice/module.php
           echo "All backends validated in ApplyChanges."
 
       - name: Check RequestAction Handles All Idents
