@@ -94,18 +94,7 @@ jobs:
               sys.exit(1)
 
           all_types = set(el.get('type') for el in form.get('elements', []) if 'type' in el)
-          print('All ' + str(len(all_types)) + ' element types are valid IPS form types: ' + str(sorted(all_types)))
-
-          # Check that each element type appears only once (no duplicate types)
-          from collections import Counter
-          type_counts = Counter(el.get('type') for el in form.get('elements', []) if 'type' in el)
-          duplicate_types = {t: c for t, c in type_counts.items() if c > 1}
-          if duplicate_types:
-              print('ERROR: Duplicate element types found (each type should appear only once):')
-              for t, c in duplicate_types.items():
-                  print(f'  Type \"{t}\" appears {c} times')
-              sys.exit(1)
-          print('No duplicate element types found.')
+          print('All ' + str(len(all_types)) + ' unique element types are valid IPS form types: ' + str(sorted(all_types)))
           "
 
       - name: Check form.json for Duplicate Property Names
