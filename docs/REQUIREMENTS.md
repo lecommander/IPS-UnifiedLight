@@ -188,15 +188,21 @@
 | FR-815 | WLED White, WLED RGB, WLED FX werden unterstützt | ✅ Implementiert |
 | FR-816 | HTTP Timeout von 5 Sekunden für Robustheit | ✅ Implementiert |
 
-### 2.3 Formular-Anforderungen
+### 2.3 Formular-Anforderungen (IPS form.json Spezifikation)
 
-| ID | Anforderung | Status |
-|----|-------------|--------|
-| FR-301 | Backend Type muss als Select-Feld auswählbar sein | ✅ Implementiert |
-| FR-302 | DMX Settings nur bei BackendType=0 anzeigen | ✅ Implementiert (v2026-04-06) |
-| FR-303 | Shelly/Zigbee Settings nur bei BackendType>0 anzeigen | ✅ Implementiert (v2026-04-06) |
-| FR-304 | Quick-Test Buttons müssen verfügbar sein | ✅ Implementiert |
-| FR-305 | Status-Icons müssen gültig sein (Active, Warning) | ✅ Implementiert |
+| ID | Anforderung | Beschreibung | Status |
+|----|-------------|--------------|--------|
+| FR-301 | Backend Type muss als Select-Feld auswählbar sein | `{"type": "Select", "name": "BackendType"}` | ✅ Implementiert |
+| FR-302 | Nur backend-spezifische Settings anzeigen | `visible`-Attribut mit BackendType-Bedingung | ✅ Implementiert |
+| FR-303 | Quick-Test Buttons müssen verfügbar sein | `{"type": "Button", "onClick": "..."}` | ✅ Implementiert |
+| FR-304 | Status-Icons müssen gültig sein | Nur Active, Warning, Error, Execute | ✅ Implementiert |
+| FR-305 | Texteingabe-Felder müssen ValidationTextBox sein | `{"type": "ValidationTextBox"}` (nicht TextField!) | ✅ Implementiert |
+| FR-306 | Instanz-Auswahl muss SelectInstance sein | `{"type": "SelectInstance"}` | ✅ Implementiert |
+| FR-307 | Variablen-Auswahl muss SelectVariable sein | `{"type": "SelectVariable"}` | ✅ Implementiert |
+| FR-308 | Zahlen-Eingabe muss NumberSpinner sein | `{"type": "NumberSpinner", "minimum", "maximum"}` | ✅ Implementiert |
+| FR-309 | Trennlinien müssen Label sein | `{"type": "Label", "caption": "── ... ──"}` | ✅ Implementiert |
+| FR-310 | form.json muss gültiges JSON sein | Python `json.tool` Validation in CI | ✅ Implementiert |
+| FR-311 | Alle Property-Namen in form.json müssen mit RegisterProperty in module.php übereinstimmen | `name` in form.json == erster Parameter von RegisterProperty | ✅ Implementiert |
 
 ---
 
@@ -382,8 +388,10 @@ SET Status = 102 (Active)
 |-----|---------|-------|
 | PHP Syntax | `php -l LightDevice/module.php` | PHP 7.4 |
 | JSON Validation | `python -m json.tool` für form.json + module.json | Python 3 |
+| Form Element Types | Keine ungültigen Typen (TextField, etc.) | Python json + grep |
+| Property Name Match | form.json `name` == RegisterProperty in module.php | Python + grep |
 | Structure Check | Backend-Konstanten, ApplyChanges Cases, RequestAction Idents, Public API | grep |
-| Form Validation | BackendType Select mit min. 3 Optionen, Status-Codes 102+201 | Python json |
+| Backend Files | Alle Backend-Klassen Dateien existieren | `test -f` |
 | Requirements Check | docs/REQUIREMENTS.md existiert mit allen Pflicht-Sektionen | grep |
 
 ### 7.2 Manuelle Tests
@@ -413,6 +421,9 @@ SET Status = 102 (Active)
 | T-015 | ULIGHT_FadeTo() per Script aufrufen (HomeMatic) | Fade via RAMP_TIME | ✅ |
 | T-016 | ULIGHT_FadeTo() per Script aufrufen (KNX/Hue/Shelly) | Instant setzen (kein nativer Fade) | ✅ |
 | T-017 | Ungültigen Ident per RequestAction senden | Exception wird geworfen | ✅ |
+| T-018 | Form öffnet ohne Fehler | Kein "nicht unterstützter Type" Fehler | ✅ |
+| T-019 | Alle form.json Elementtypen sind valide | Keine TextField, nur ValidationTextBox/Select/SelectInstance/SelectVariable/NumberSpinner/Label/Button | ✅ |
+| T-020 | Property-Namen in form.json matchen module.php | Alle `name`-Felder haben对应的 RegisterProperty-Aufruf | ✅ |
 
 ### 7.3 Backend-spezifische Tests
 
@@ -542,6 +553,7 @@ SET Status = 102 (Active)
 | 1.6.0 | 2026-04-06 | DALI über KNX Backend implementiert (EIB_Switch/EIB_DimValue via KNX-DALI-Gateway) + fehlende Test Cases ergänzt | Qwen Code |
 | 1.7.0 | 2026-04-06 | Tasmota/ESP Backend implementiert (RequestAction auf IPS MQTT Variablen — gleicher Code-Pfad wie Shelly/Hue) | Qwen Code |
 | 2.0.0 | 2026-04-06 | **Major Refactoring**: Alle Backends in separate Klassen extrahiert (Backends/*.php), IBackend-Interface eingeführt, module.php auf Backend-Delegation umgestellt. WLED Backend implementiert (HTTP REST API). | Qwen Code |
+| 2.0.1 | 2026-04-06 | **Bugfix**: TextField → ValidationTextBox in form.json (IPS unterstützt kein TextField). Form-Validierungstests zu GitHub Actions hinzugefügt. Property-Name-Match-Check implementiert. | Qwen Code |
 
 ---
 
