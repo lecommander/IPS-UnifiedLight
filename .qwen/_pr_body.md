@@ -1,39 +1,38 @@
 ## Summary
 
-This PR implements the Philips Hue backend (Prio 2) using the Schnittcher/IPS-PhilipsHue-V2 module. Hue devices are accessed through the Power and Brightness variables created by the Hue module, using RequestAction() for both switching and dimming. This brings the total number of supported backends to 8 across 6 protocols.
+This PR implements the Tasmota/ESP backend (Prio 3) using the IPS MQTT module. Tasmota devices are controlled through MQTT variables (POWER boolean, Dimmer integer 0-100) created by the IPS MQTT module, using RequestAction() for both switching and dimming. This approach reuses the existing variable-based backend pattern shared by Shelly, Zigbee2MQTT, and Hue, requiring only the addition of BACKEND_TASMOTA to the existing case blocks. This brings the total number of supported backends to 10 across 8 protocols.
 
 ## Changes
 
-### module.php — Philips Hue backend implementation
-- Added BACKEND_HUE constant (value 7)
-- Extended ApplyChanges() to include Hue in the variable-based validation branch (Shelly/Zigbee2MQTT/Hue share the same PowerVariableID + BrightnessVariableID pattern)
-- Extended SetPower() with Hue case: calls RequestAction(powerVariableID, on)
-- Extended SetBrightness() with Hue case: calls RequestAction(brightnessVariableID, level) + RequestAction(powerVariableID, level > 0)
-- Hue uses the same code path as Shelly/Zigbee2MQTT since all three are variable-based backends managed by the IPS-PhilipsHue-V2 module
-- Updated module header docblock to list Philips Hue as a supported backend
+### module.php — Tasmota/ESP backend implementation
+- Added BACKEND_TASMOTA constant (value 9)
+- Extended ApplyChanges() to include Tasmota in the variable-based validation branch (Shelly/Zigbee2MQTT/Hue/Tasmota share the same PowerVariableID + BrightnessVariableID pattern)
+- Extended SetPower() with Tasmota case: calls RequestAction(powerVariableID, on)
+- Extended SetBrightness() with Tasmota case: calls RequestAction(brightnessVariableID, level) + RequestAction(powerVariableID, level > 0)
+- Tasmota uses the exact same code path as Shelly/Zigbee2MQTT/Hue since all four are variable-based backends
+- Updated module header docblock to list Tasmota/ESP as a supported backend with MQTT topic reference
 
-### form.json — Hue configuration form
-- Added Philips Hue option to BackendType select (value 7, caption: "Philips Hue (IPS-PhilipsHue-V2)")
-- Extended Shelly/Zigbee2MQTT settings visibility condition from "BackendType > 0 && BackendType < 3" to "BackendType == 1 || BackendType == 2 || BackendType == 7" to include Hue in the variable-based settings section
-- Updated section caption to "Shelly / Zigbee2MQTT / Hue Settings (variable-based backends)"
+### form.json — Tasmota configuration form
+- Added Tasmota/ESP option to BackendType select (value 9, caption: "Tasmota/ESP (IPS MQTT)")
+- Extended variable-based settings visibility condition to include BackendType == 9
+- Updated section caption to "Shelly / Zigbee2MQTT / Hue / Tasmota Settings (variable-based backends)"
 
 ### docs/REQUIREMENTS.md — Documentation updates
-- Marked Philips Hue as implemented in backend overview table
-- Updated Philips Hue functional requirements (FR-511 through FR-516) from planned to implemented
-- Added IPS-PhilipsHue-V2 to dependencies table
-- Extended ApplyChanges validation pseudocode to include Hue in the variable-based branch
-- Added 5 Philips Hue test cases (T-501 through T-505)
-- Updated roadmap: RM-003 Philips Hue marked as implemented
-- Updated change history with version 1.5.0
+- Marked Tasmota/ESP as implemented in backend overview table (IPS MQTT Modul)
+- Updated Tasmota functional requirements (FR-711 through FR-716) from planned to implemented
+- Extended ApplyChanges validation pseudocode to include Tasmota in the variable-based branch
+- Added 5 Tasmota test cases (T-701 through T-705)
+- Updated roadmap: RM-005 Tasmota/ESP marked as implemented
+- Updated change history with version 1.7.0
 
 ### .github/workflows/test.yml — CI updates
-- Added BACKEND_HUE constant check to structure validation job
-- Added case self::BACKEND_HUE check to ApplyChanges validation job
+- Added BACKEND_TASMOTA constant check to structure validation job
+- Added case self::BACKEND_TASMOTA check to ApplyChanges validation job
 
 ## Why These Changes Matter
 
-Philips Hue is the most widely used consumer smart lighting system globally and one of the top three light control protocols in the German IPS community (alongside HomeMatic and KNX). By supporting Hue through the IPS-PhilipsHue-V2 module, this module now covers the full spectrum of light control scenarios: professional installations (KNX, HomeMatic Wired), retrofits (HomeMatic Funk, Shelly), consumer systems (Hue), and IoT protocols (Zigbee2MQTT).
+Tasmota is the most popular open-source firmware for ESP8266/ESP32-based smart home devices. It is widely used in the IPS community for DIY lighting projects, sonoff switches, and custom ESP-based dimmers. By supporting Tasmota through the IPS MQTT module, this module now covers the full spectrum from professional installations (KNX, DALI, HomeMatic Wired) to consumer systems (Hue, Shelly) to DIY/IoT solutions (Tasmota).
 
-The implementation reuses the existing variable-based backend pattern (same as Shelly and Zigbee2MQTT), requiring only three lines of code in each of ApplyChanges, SetPower, and SetBrightness. This demonstrates the value of the unified abstraction layer: new variable-based backends can be added with minimal code changes.
+The implementation demonstrates the power of the variable-based abstraction layer: Tasmota required exactly zero new code logic. Adding BACKEND_TASMOTA to the existing Shelly/Zigbee2MQTT/Hue case blocks was sufficient because all four backends communicate through IPS variables managed by their respective modules (IPS-Shelly, IPS-Zigbee2MQTT, IPS-PhilipsHue-V2, IPS MQTT). This means future variable-based backends can be added with a single line of code per method.
 
-The Hue module handles all the complexity of bridge communication, light discovery, and ZigBee protocol translation internally. Users simply select the On and Brightness variables from the Hue device instance in the object tree, and UnifiedLight handles the rest. This is consistent with the Shelly/Zigbee2MQTT approach and avoids the need for direct API calls to the Hue bridge.
+The MQTT approach is the standard way Tasmota devices are integrated in IPS: the IPS MQTT module subscribes to stat/tasmota/RESULT for status updates and publishes to cmnd/tasmota/POWER and cmnd/tasmota/Dimmer for control. This provides reliable bidirectional communication with automatic status synchronization, unlike the HTTP API fallback which would require polling.

@@ -52,6 +52,10 @@ jobs:
           grep -q "const BACKEND_HMWIRED" LightDevice/module.php
           echo "Checking BACKEND_HUE constant..."
           grep -q "const BACKEND_HUE" LightDevice/module.php
+          echo "Checking BACKEND_DALI constant..."
+          grep -q "const BACKEND_DALI" LightDevice/module.php
+          echo "Checking BACKEND_TASMOTA constant..."
+          grep -q "const BACKEND_TASMOTA" LightDevice/module.php
           echo "All backend constants found."
 
       - name: Check ApplyChanges Validates All Backends
@@ -72,6 +76,10 @@ jobs:
           grep -q "case self::BACKEND_HMWIRED:" LightDevice/module.php
           echo "Checking ApplyChanges validates Hue..."
           grep -q "case self::BACKEND_HUE:" LightDevice/module.php
+          echo "Checking ApplyChanges validates DALI..."
+          grep -q "case self::BACKEND_DALI:" LightDevice/module.php
+          echo "Checking ApplyChanges validates Tasmota..."
+          grep -q "case self::BACKEND_TASMOTA:" LightDevice/module.php
           echo "All backends validated in ApplyChanges."
 
       - name: Check RequestAction Handles All Idents

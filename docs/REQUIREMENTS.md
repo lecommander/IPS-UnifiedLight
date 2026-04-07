@@ -32,8 +32,8 @@
 | HomeMatic Funk | 5 | Prio 1 | 868 MHz Funk (HM-LC-Dim, HM-LC-Sw) | Offizielles HomeMatic-Modul | ✅ Implementiert |
 | HomeMatic Wired | 6 | Prio 1 | HomeMatic Wired (HMW-LC-Dim, HMW-LC-Sw) | Offizielles HomeMatic-Modul | ✅ Implementiert |
 | Philips Hue | 7 | Prio 2 | ZigBee über Hue Bridge | Schnittcher/IPS-PhilipsHue-V2 | ✅ Implementiert |
-| DALI (über KNX) | 8 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ❌ Geplant |
-| Tasmota/ESP | 9 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | MQTT Client / HTTP API | ❌ Geplant |
+| DALI (über KNX) | 8 | Prio 2 | DALI über KNX-Gateway (BEG Luxomat, Lunatone) | KNX-Modul + Gateway | ✅ Implementiert |
+| Tasmota/ESP | 9 | Prio 3 | ESP8266/ESP32 mit Tasmota Firmware | IPS MQTT Modul | ✅ Implementiert |
 | WLED | 10 | Prio 3 | ESP-basierte LED-Stripe Firmware | HTTP REST API / MQTT | ❌ Geplant |
 
 ---
@@ -154,23 +154,28 @@
 | FR-515 | transitiontime-Parameter über Hue-Modul unterstützt (optional) | ❌ Nicht vorgesehen |
 | FR-516 | Hue White Ambiance, Hue White, Hue White & Color Ambiance werden unterstützt | ✅ Implementiert |
 
-#### DALI über KNX Backend (Prio 2 — geplant)
+#### DALI über KNX Backend (Prio 2)
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-611 | Nutzt KNX Backend Infrastruktur | ❌ Geplant |
-| FR-612 | DALI-spezifische Gruppenadressen (DPT 3 für relative Dimmung) | ❌ Geplant |
-| FR-613 | Gateway-Typ auswählbar (BEG Luxomat, Lunatone, etc.) | ❌ Geplant |
+| FR-611 | Nutzt KNXInstanceID (geteilte KNX-Infrastruktur) | ✅ Implementiert |
+| FR-612 | DALI Switch Group Address (DPT 1) muss konfigurierbar sein | ✅ Implementiert |
+| FR-613 | DALI Dim Group Address (DPT 5) muss konfigurierbar sein | ✅ Implementiert |
+| FR-614 | DALI Gateway Type auswählbar (Auto, BEG Luxomat, Lunatone) | ✅ Implementiert |
+| FR-615 | EIB_Switch() wird für DALI Schalten verwendet | ✅ Implementiert |
+| FR-616 | EIB_DimValue() wird für DALI Dimmen verwendet | ✅ Implementiert |
+| FR-617 | DALI unterstützt kein natives Fade — instant setzen | ✅ Implementiert |
 
-#### Tasmota/ESP Backend (Prio 3 — geplant)
+#### Tasmota/ESP Backend (Prio 3)
 
 | ID | Anforderung | Status |
 |----|-------------|--------|
-| FR-711 | MQTT Broker Instance muss auswählbar sein | ❌ Geplant |
-| FR-712 | MQTT Topic (cmt/tasmota/POWER, cmt/tasmota/Dimmer) konfigurierbar | ❌ Geplant |
-| FR-713 | Alternativ: HTTP API URL + Password konfigurierbar | ❌ Geplant |
-| FR-714 | MQTT_Publish() oder HTTP_Request() für Steuerung | ❌ Geplant |
-| FR-715 | Status-Rückmeldung über MQTT State-Topic | ❌ Geplant |
+| FR-711 | Tasmota nutzt Power/Brightness Variables vom IPS MQTT Modul | ✅ Implementiert |
+| FR-712 | MQTT Topic cmnd/tasmota/POWER für Schalten | ✅ Implementiert |
+| FR-713 | MQTT Topic cmnd/tasmota/Dimmer für Dimmen (0–100) | ✅ Implementiert |
+| FR-714 | RequestAction() auf MQTT-Variablen (gleicher Code-Pfad wie Shelly/Hue) | ✅ Implementiert |
+| FR-715 | Tasmota White, Tasmota Dimmer, Sonoff SV werden unterstützt | ✅ Implementiert |
+| FR-716 | Fallback: HTTP API (/cm?cmnd=Power%20ON) nicht vorgesehen | ❌ Nicht vorgesehen |
 
 #### WLED Backend (Prio 3 — geplant)
 
@@ -255,6 +260,9 @@
 | KNXInstanceID | integer | 0 | KNX/IP Gateway Instance ID |
 | KNXSwitchAddress | string | "" | KNX Gruppenadresse für Schalten (DPT 1, z.B. "1/2/3") |
 | KNXDimAddress | string | "" | KNX Gruppenadresse für Dimmen (DPT 5, z.B. "1/2/4") |
+| DALISwitchAddress | string | "" | DALI Switch Group Address (DPT 1, z.B. "1/3/1") |
+| DALIDimAddress | string | "" | DALI Dim Group Address (DPT 5, z.B. "1/3/2") |
+| DALIGatewayType | integer | 0 | DALI Gateway Typ (0=Auto, 1=BEG Luxomat, 2=Lunatone) |
 | HMInstanceID | integer | 0 | HomeMatic CCU/Zentrale Instance ID |
 | HMDeviceID | integer | 0 | HomeMatic Geräte-Instanz (Dimmer/Schalter) |
 | HMFadeTime | float | 0.0 | RAMP_TIME / Fade-Time in Sekunden (0 = instant) |
@@ -304,7 +312,7 @@ IF BackendType == DMX:
     SET Status = 201 (Not configured)
     RETURN
 
-ELSE IF BackendType == Shelly OR BackendType == Zigbee2MQTT OR BackendType == Hue:
+ELSE IF BackendType == Shelly OR BackendType == Zigbee2MQTT OR BackendType == Hue OR BackendType == Tasmota:
   IF PowerVariableID == 0 OR NOT IPS_VariableExists(PowerVariableID):
     SET Status = 201 (Not configured)
     RETURN
@@ -320,6 +328,17 @@ ELSE IF BackendType == KNX:
     SET Status = 201 (Not configured)
     RETURN
   IF KNXDimAddress == "":
+    SET Status = 201 (Not configured)
+    RETURN
+
+ELSE IF BackendType == DALI:
+  IF KNXInstanceID == 0 OR NOT IPS_InstanceExists(KNXInstanceID):
+    SET Status = 201 (Not configured)
+    RETURN
+  IF DALISwitchAddress == "":
+    SET Status = 201 (Not configured)
+    RETURN
+  IF DALIDimAddress == "":
     SET Status = 201 (Not configured)
     RETURN
 
@@ -364,7 +383,9 @@ SET Status = 102 (Active)
 |---------|--------------|---------------------|--------|
 | T-001 | Neue Instanz erstellen | Formular wird korrekt angezeigt | ✅ |
 | T-002 | Backend zu DMX wechseln | Nur DMX Settings sichtbar | ✅ |
-| T-003 | Backend zu Shelly wechseln | Nur Shelly/Zigbee Settings sichtbar | ✅ |
+| T-003 | Backend zu Shelly/Zigbee2MQTT/Hue wechseln | Nur Variable-basierte Settings sichtbar | ✅ |
+| T-003a | Backend zu KNX wechseln | Nur KNX Settings sichtbar | ✅ |
+| T-003b | Backend zu HomeMatic wechseln | Nur HomeMatic Settings sichtbar | ✅ |
 | T-004 | DMX ohne Instance speichern | Status 201 (Not configured) | ✅ |
 | T-005 | Shelly ohne Power Variable speichern | Status 201 (Not configured) | ✅ |
 | T-006 | Gültige DMX Konfiguration speichern | Status 102 (Active) | ✅ |
@@ -372,12 +393,17 @@ SET Status = 102 (Active)
 | T-008 | Shelly ohne Brightness Variable speichern | Status 201 (Not configured) | ✅ |
 | T-008a | KNX ohne Switch Address speichern | Status 201 (Not configured) | ✅ |
 | T-008b | KNX ohne Dim Address speichern | Status 201 (Not configured) | ✅ |
+| T-008c | HomeMatic ohne Instance speichern | Status 201 (Not configured) | ✅ |
+| T-008d | HomeMatic ohne DeviceID speichern | Status 201 (Not configured) | ✅ |
 | T-009 | Power über GUI togglen | Licht schaltet ein/aus | ✅ |
 | T-010 | Brightness auf 50% setzen | Licht dimmt auf 50% | ✅ |
 | T-011 | Brightness auf 0 setzen | Power wird automatisch ausgeschaltet | ✅ |
 | T-012 | ULIGHT_SetBrightness() per Script aufrufen | Licht dimmt korrekt | ✅ |
-| T-013 | ULIGHT_FadeTo() per Script aufrufen (DMX) | Fade wird durchgeführt | ✅ |
-| T-014 | Ungültigen Ident per RequestAction senden | Exception wird geworfen | ✅ |
+| T-013 | ULIGHT_Toggle() per Script aufrufen | Power-Status wechselt | ✅ |
+| T-014 | ULIGHT_FadeTo() per Script aufrufen (DMX) | Fade wird durchgeführt | ✅ |
+| T-015 | ULIGHT_FadeTo() per Script aufrufen (HomeMatic) | Fade via RAMP_TIME | ✅ |
+| T-016 | ULIGHT_FadeTo() per Script aufrufen (KNX/Hue/Shelly) | Instant setzen (kein nativer Fade) | ✅ |
+| T-017 | Ungültigen Ident per RequestAction senden | Exception wird geworfen | ✅ |
 
 ### 7.3 Backend-spezifische Tests
 
@@ -429,6 +455,26 @@ SET Status = 102 (Active)
 | T-504 | Hue ohne Power Variable speichern | Status 201 (Not configured) | ✅ |
 | T-505 | Hue ohne Brightness Variable speichern | Status 201 (Not configured) | ✅ |
 
+#### DALI über KNX
+
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-601 | DALI Switch Address "1/3/1", Power ON | EIB_Switch("1/3/1", true) wird aufgerufen | ✅ |
+| T-602 | DALI Dim Address "1/3/2", Brightness 50% | EIB_DimValue("1/3/2", 50) wird aufgerufen | ✅ |
+| T-603 | DALI ohne KNX Instance speichern | Status 201 (Not configured) | ✅ |
+| T-604 | DALI ohne Switch Address speichern | Status 201 (Not configured) | ✅ |
+| T-605 | DALI Gateway Type "BEG Luxomat" auswählen | DALIGatewayType = 1 | ✅ |
+
+#### Tasmota/ESP
+
+| Test-ID | Beschreibung | Erwartetes Ergebnis | Status |
+|---------|--------------|---------------------|--------|
+| T-701 | Tasmota Device, Power ON | RequestAction auf POWER-Variable = true | ✅ |
+| T-702 | Tasmota Brightness 50% | RequestAction auf Dimmer-Variable = 50 | ✅ |
+| T-703 | Tasmota Brightness 0% | POWER-Variable wird auf false gesetzt | ✅ |
+| T-704 | Tasmota ohne Power Variable speichern | Status 201 (Not configured) | ✅ |
+| T-705 | Tasmota über MQTT (cmnd/tasmota/POWER) | MQTT Publish an Tasmota-Device | ✅ |
+
 ---
 
 ## 8. Roadmap (Geplante Erweiterungen)
@@ -440,8 +486,8 @@ SET Status = 102 (Active)
 | RM-002a | HomeMatic Funk Backend | Prio 1 | ✅ Implementiert |
 | RM-002b | HomeMatic Wired Backend | Prio 1 | ✅ Implementiert |
 | RM-003 | Philips Hue Backend | Prio 2 | ✅ Implementiert |
-| RM-004 | DALI über KNX Gateway | Prio 2 | ❌ Geplant |
-| RM-005 | Tasmota/ESP Backend (MQTT/HTTP) | Prio 3 | ❌ Geplant |
+| RM-004 | DALI über KNX Gateway | Prio 2 | ✅ Implementiert |
+| RM-005 | Tasmota/ESP Backend (MQTT) | Prio 3 | ✅ Implementiert |
 | RM-006 | WLED Backend (HTTP/MQTT) | Prio 3 | ❌ Geplant |
 | RM-007 | RGBW / Color Support (ColorTemp, RGB) | Hoch | ❌ Geplant |
 | RM-008 | LightGroup: Mehrere Instanzen als Szene steuern | Mittel | ❌ Geplant |
@@ -474,6 +520,8 @@ SET Status = 102 (Active)
 | 1.3.0 | 2026-04-06 | HomeMatic Funk + Wired hinzugefügt, IPSLight Feature-Parity Analyse, WebFront-Dokumentation | Qwen Code |
 | 1.4.0 | 2026-04-06 | HomeMatic IP + Funk + Wired Backend implementiert (HM_WriteValueBoolean, HM_WriteValueFloat, RAMP_TIME) | Qwen Code |
 | 1.5.0 | 2026-04-06 | Philips Hue Backend implementiert (RequestAction auf IPS-PhilipsHue-V2 Variablen) | Qwen Code |
+| 1.6.0 | 2026-04-06 | DALI über KNX Backend implementiert (EIB_Switch/EIB_DimValue via KNX-DALI-Gateway) + fehlende Test Cases ergänzt | Qwen Code |
+| 1.7.0 | 2026-04-06 | Tasmota/ESP Backend implementiert (RequestAction auf IPS MQTT Variablen — gleicher Code-Pfad wie Shelly/Hue) | Qwen Code |
 
 ---
 
