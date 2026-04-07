@@ -77,11 +77,15 @@ jobs:
                   errors.append(f'Action {i}: unsupported type \"{etype}\" (valid: {sorted(VALID_TYPES)})')
 
           # Check all status entries
+          VALID_ICONS = {'active', 'error', 'execute'}
           for i, el in enumerate(form.get('status', [])):
               if 'code' not in el:
                   errors.append(f'Status {i}: missing \"code\" field')
               if 'caption' not in el:
                   errors.append(f'Status {i}: missing \"caption\" field')
+              icon = el.get('icon')
+              if icon and icon not in VALID_ICONS:
+                  errors.append(f'Status {i}: invalid icon \"{icon}\" (valid: {sorted(VALID_ICONS)})')
 
           if errors:
               print('ERROR: form.json validation failed:')
@@ -91,6 +95,17 @@ jobs:
 
           all_types = set(el.get('type') for el in form.get('elements', []) if 'type' in el)
           print('All ' + str(len(all_types)) + ' element types are valid IPS form types: ' + str(sorted(all_types)))
+
+          # Check that each element type appears only once (no duplicate types)
+          from collections import Counter
+          type_counts = Counter(el.get('type') for el in form.get('elements', []) if 'type' in el)
+          duplicate_types = {t: c for t, c in type_counts.items() if c > 1}
+          if duplicate_types:
+              print('ERROR: Duplicate element types found (each type should appear only once):')
+              for t, c in duplicate_types.items():
+                  print(f'  Type \"{t}\" appears {c} times')
+              sys.exit(1)
+          print('No duplicate element types found.')
           "
 
       - name: Check form.json for Duplicate Property Names
