@@ -17,6 +17,7 @@
  *     - Funk (5):       HM-LC-Dim1TPBU-FM, HM-LC-Dim1T-FM, HM-LC-Sw1-Pl-2
  *     - Wired (6):      HMW-LC-Dim1L-DR, HMW-IO-12-Sw7-DR
  *   - Philips Hue:  RequestAction() on variables created by Schnittcher/IPS-PhilipsHue-V2 (7)
+ *   - DALI via KNX: EIB_Switch() / EIB_DimValue() via KNX-DALI-Gateway (BEG Luxomat, Lunatone) (8)
  *
  * Public API (callable from scripts):
  *   ULIGHT_SetPower($id, bool $on)
@@ -35,6 +36,7 @@ class LightDevice extends IPSModuleStrict
     const BACKEND_HMRF         = 5;
     const BACKEND_HMWIRED      = 6;
     const BACKEND_HUE          = 7;
+    const BACKEND_DALI         = 8;
 
     public function Create(): void
     {
@@ -57,6 +59,11 @@ class LightDevice extends IPSModuleStrict
         $this->RegisterPropertyInteger('KNXInstanceID', 0);
         $this->RegisterPropertyString('KNXSwitchAddress', '');
         $this->RegisterPropertyString('KNXDimAddress', '');
+
+        // --- DALI via KNX backend (shares KNXInstanceID) ---
+        $this->RegisterPropertyString('DALISwitchAddress', '');
+        $this->RegisterPropertyString('DALIDimAddress', '');
+        $this->RegisterPropertyInteger('DALIGatewayType', 0);  // 0=Auto, 1=BEG Luxomat, 2=Lunatone
 
         // --- HomeMatic backends (IP, Funk, Wired — shared API) ---
         $this->RegisterPropertyInteger('HMInstanceID', 0);
@@ -125,6 +132,24 @@ class LightDevice extends IPSModuleStrict
                 }
                 $dimAddr = $this->ReadPropertyString('KNXDimAddress');
                 if ($dimAddr === '') {
+                    $this->SetStatus(201);
+                    return;
+                }
+                break;
+
+            case self::BACKEND_DALI:
+                $daliKnXID = $this->ReadPropertyInteger('KNXInstanceID');
+                if ($daliKnXID === 0 || !IPS_InstanceExists($daliKnXID)) {
+                    $this->SetStatus(201);
+                    return;
+                }
+                $daliSwitchAddr = $this->ReadPropertyString('DALISwitchAddress');
+                if ($daliSwitchAddr === '') {
+                    $this->SetStatus(201);
+                    return;
+                }
+                $daliDimAddr = $this->ReadPropertyString('DALIDimAddress');
+                if ($daliDimAddr === '') {
                     $this->SetStatus(201);
                     return;
                 }
@@ -204,6 +229,13 @@ class LightDevice extends IPSModuleStrict
                 }
                 break;
 
+            case self::BACKEND_DALI:
+                $daliSwitchAddr = $this->ReadPropertyString('DALISwitchAddress');
+                if ($daliSwitchAddr !== '') {
+                    EIB_Switch($daliSwitchAddr, $on);
+                }
+                break;
+
             case self::BACKEND_HMIP:
             case self::BACKEND_HMRF:
             case self::BACKEND_HMWIRED:
@@ -256,6 +288,13 @@ class LightDevice extends IPSModuleStrict
                 $dimAddr = $this->ReadPropertyString('KNXDimAddress');
                 if ($dimAddr !== '') {
                     EIB_DimValue($dimAddr, $level);
+                }
+                break;
+
+            case self::BACKEND_DALI:
+                $daliDimAddr = $this->ReadPropertyString('DALIDimAddress');
+                if ($daliDimAddr !== '') {
+                    EIB_DimValue($daliDimAddr, $level);
                 }
                 break;
 
